@@ -8,16 +8,60 @@ import (
 
 type Term []byte
 
+func (t Term) Text() string {
+	return string(t[1:])
+}
+
+func (t Term) Int64() int64 {
+	return newInt64BytesFromBytes(t[1:]).int64()
+}
+
+func (t Term) Float64() float64 {
+	return newFloat64BytesFromBytes(t[1:]).float64()
+}
+
 func (t Term) String() string {
 	switch t[0] {
 	case byte(Nil):
 		return "nil"
 	case byte(Text):
-		return string(t[1:])
+		return t.Text()
 	case byte(Int64):
-		return fmt.Sprintf("%d", newInt64BytesFromBytes(t[1:]).int64())
+		return fmt.Sprintf("%d", t.Int64())
 	case byte(Float64):
-		return fmt.Sprintf("%f", newFloat64BytesFromBytes(t[1:]).float64())
+		return fmt.Sprintf("%f", t.Float64())
+	default:
+		log.Panicf("unsupported term type: %d", t[0])
+		return ""
+	}
+}
+
+func (t Term) TermType() TermType {
+	switch t[0] {
+	case byte(Nil):
+		return Nil
+	case byte(Text):
+		return Text
+	case byte(Int64):
+		return Int64
+	case byte(Float64):
+		return Float64
+	default:
+		log.Panicf("unsupported term type: %d", t[0])
+		return Nil
+	}
+}
+
+func (t Term) Type() string {
+	switch t[0] {
+	case byte(Nil):
+		return "nil"
+	case byte(Text):
+		return "text"
+	case byte(Int64):
+		return "int64"
+	case byte(Float64):
+		return "float64"
 	default:
 		log.Panicf("unsupported term type: %d", t[0])
 		return ""
