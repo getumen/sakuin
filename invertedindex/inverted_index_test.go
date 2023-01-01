@@ -62,12 +62,12 @@ func TestInvertedIndex_Search(t *testing.T) {
 				exp: expression.NewPhrase(
 					[]*expression.Expression{
 						expression.NewFeature(
-							expression.NewBoolenaFeature(
+							expression.NewFeatureSpec(
 								"f1",
 								termcond.NewEqual(term.NewText("a"))),
 						),
 						expression.NewFeature(
-							expression.NewBoolenaFeature(
+							expression.NewFeatureSpec(
 								"f1",
 								termcond.NewEqual(term.NewText("b"))),
 						),
@@ -115,13 +115,13 @@ func TestInvertedIndex_Search(t *testing.T) {
 				exp: expression.NewAnd(
 					[]*expression.Expression{
 						expression.NewFeature(
-							expression.NewBoolenaFeature(
+							expression.NewFeatureSpec(
 								"f1",
 								termcond.NewEqual(term.NewText("a"))),
 						),
 						expression.NewNot(
 							expression.NewFeature(
-								expression.NewBoolenaFeature(
+								expression.NewFeatureSpec(
 									"f1", termcond.NewEqual(term.NewText("b"))),
 							),
 						),
@@ -164,12 +164,12 @@ func TestInvertedIndex_Search(t *testing.T) {
 				exp: expression.NewOr(
 					[]*expression.Expression{
 						expression.NewFeature(
-							expression.NewBoolenaFeature(
+							expression.NewFeatureSpec(
 								"f1",
 								termcond.NewEqual(term.NewText("a"))),
 						),
 						expression.NewFeature(
-							expression.NewBoolenaFeature(
+							expression.NewFeatureSpec(
 								"f1",
 								termcond.NewEqual(term.NewText("b"))),
 						),
@@ -236,12 +236,12 @@ func TestInvertedIndex_Search(t *testing.T) {
 					[]*expression.Expression{
 						expression.NewPhrase([]*expression.Expression{
 							expression.NewFeature(
-								expression.NewBoolenaFeature(
+								expression.NewFeatureSpec(
 									"f1",
 									termcond.NewEqual(term.NewText("a"))),
 							),
 							expression.NewFeature(
-								expression.NewBoolenaFeature(
+								expression.NewFeatureSpec(
 									"f1",
 									termcond.NewEqual(term.NewText("b"))),
 							),
@@ -251,12 +251,12 @@ func TestInvertedIndex_Search(t *testing.T) {
 						expression.NewNot(
 							expression.NewPhrase([]*expression.Expression{
 								expression.NewFeature(
-									expression.NewBoolenaFeature(
+									expression.NewFeatureSpec(
 										"f1",
 										termcond.NewEqual(term.NewText("c"))),
 								),
 								expression.NewFeature(
-									expression.NewBoolenaFeature(
+									expression.NewFeatureSpec(
 										"f1",
 										termcond.NewEqual(term.NewText("d"))),
 								),
@@ -337,12 +337,12 @@ func TestInvertedIndex_Search(t *testing.T) {
 							[]*expression.Expression{
 								expression.NewPhrase([]*expression.Expression{
 									expression.NewFeature(
-										expression.NewBoolenaFeature(
+										expression.NewFeatureSpec(
 											"f1",
 											termcond.NewEqual(term.NewText("a"))),
 									),
 									expression.NewFeature(
-										expression.NewBoolenaFeature(
+										expression.NewFeatureSpec(
 											"f1",
 											termcond.NewEqual(term.NewText("b"))),
 									),
@@ -352,12 +352,12 @@ func TestInvertedIndex_Search(t *testing.T) {
 								expression.NewNot(
 									expression.NewPhrase([]*expression.Expression{
 										expression.NewFeature(
-											expression.NewBoolenaFeature(
+											expression.NewFeatureSpec(
 												"f1",
 												termcond.NewEqual(term.NewText("c"))),
 										),
 										expression.NewFeature(
-											expression.NewBoolenaFeature(
+											expression.NewFeatureSpec(
 												"f1",
 												termcond.NewEqual(term.NewText("d"))),
 										),
@@ -368,7 +368,7 @@ func TestInvertedIndex_Search(t *testing.T) {
 							},
 						),
 						expression.NewFeature(
-							expression.NewBoolenaFeature(
+							expression.NewFeatureSpec(
 								"f1",
 								termcond.NewEqual(term.NewText("e")))),
 					},
@@ -391,7 +391,7 @@ func TestInvertedIndex_Search(t *testing.T) {
 
 func TestInvertedIndex_GetPostingListInFeature(t *testing.T) {
 	type args struct {
-		feature *expression.BooleanFeature
+		feature *expression.FeatureSpec
 	}
 	tests := []struct {
 		name string
@@ -429,7 +429,7 @@ func TestInvertedIndex_GetPostingListInFeature(t *testing.T) {
 				return result
 			},
 			args: args{
-				feature: expression.NewBoolenaFeature(
+				feature: expression.NewFeatureSpec(
 					"f1",
 					termcond.NewEqual(term.NewText("a")),
 				),
@@ -479,7 +479,7 @@ func TestInvertedIndex_GetPostingListInFeature(t *testing.T) {
 				return result
 			},
 			args: args{
-				feature: expression.NewBoolenaFeature(
+				feature: expression.NewFeatureSpec(
 					"f1",
 					termcond.NewRange(
 						term.NewText("a"),

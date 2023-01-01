@@ -7,6 +7,7 @@ import (
 	"github.com/getumen/sakuin/posting"
 	"github.com/getumen/sakuin/postinglist"
 	"github.com/getumen/sakuin/term"
+	"github.com/getumen/sakuin/termcond"
 )
 
 type InvertedIndex struct {
@@ -35,7 +36,7 @@ func (i *InvertedIndex) Merge(other *InvertedIndex) {
 	}
 }
 
-func (i InvertedIndex) GetPostingListInFeature(feature *expression.BooleanFeature) *postinglist.PostingList {
+func (i InvertedIndex) GetPostingListInFeature(feature *expression.FeatureSpec) *postinglist.PostingList {
 	field := feature.Field()
 	cond := feature.TermCondition()
 	node, ok := i.Ceiling(cond.Start())
@@ -114,4 +115,32 @@ func (i InvertedIndex) Search(exp *expression.Expression) *postinglist.PostingLi
 		return postingList
 	}
 	return postinglist.NewPostingList(make([]*posting.Posting, 0))
+}
+
+func (i InvertedIndex) GetPartialIndex(conds []*termcond.TermCondition) *InvertedIndex {
+	result := NewInvertedIndex()
+	for _, cond := range conds {
+		node, ok := i.Ceiling(cond.Start())
+		if !ok {
+			continue
+		}
+		it := i.IteratorAt(node)
+
+		for {
+			key := it.Key().(term.Term)
+			if !cond.IncludeStart() && term.Comparator(key, cond.Start()) == 0 {
+				continue
+			}
+			if (term.Comparator(key, cond.End()) == 0 && !cond.IncludeEnd()) ||
+				term.Comparator(key, cond.End()) > 0 {
+				break
+			}
+			fieldIndex := it.Value().(fieldindex.FieldIndex)
+			result.Put(key, fieldIndex)
+			if !it.Next() {
+				break
+			}
+		}
+	}
+	return result
 }
