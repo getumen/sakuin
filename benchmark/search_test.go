@@ -48,21 +48,22 @@ func BenchmarkSearchFloat(b *testing.B) {
 
 	sort.Float64s(arr)
 
-	b.ResetTimer()
+	b.Run("search", func(b *testing.B) {
+		for i := 0; i < b.N; i++ {
+			query := expression.NewFeature(expression.NewFeatureSpec(
+				"value", termcond.NewRange(
+					term.NewFloat64(arr[start]),
+					true,
+					term.NewFloat64(arr[end]),
+					false,
+				),
+			))
+			partialIndex, err := storage.GetIndex(ctx, query.TermConditions())
+			require.NoError(b, err)
 
-	for i := 0; i < b.N; i++ {
-		query := expression.NewFeature(expression.NewFeatureSpec(
-			"value", termcond.NewRange(
-				term.NewFloat64(arr[start]),
-				true,
-				term.NewFloat64(arr[end]),
-				false,
-			),
-		))
-		partialIndex, err := storage.GetIndex(ctx, query.TermConditions())
-		require.NoError(b, err)
+			result := partialIndex.Search(query)
+			require.Equal(b, hit, result.Len())
+		}
+	})
 
-		result := partialIndex.Search(query)
-		require.Equal(b, hit, result.Len())
-	}
 }

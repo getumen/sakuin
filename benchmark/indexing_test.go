@@ -34,11 +34,12 @@ func BenchmarkIndexFloat(b *testing.B) {
 		)
 	}
 
-	b.ResetTimer()
+	b.Run("indexing", func(b *testing.B) {
+		for i := 0; i < b.N; i++ {
+			storage := memstorage.NewMemStorage()
+			writer := writer.NewIndexWriter(storage)
+			require.NoError(b, writer.CreateDocuments(ctx, documents))
+		}
+	})
 
-	for i := 0; i < b.N; i++ {
-		storage := memstorage.NewMemStorage()
-		writer := writer.NewIndexWriter(storage)
-		require.NoError(b, writer.CreateDocuments(ctx, documents))
-	}
 }
