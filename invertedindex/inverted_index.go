@@ -2,7 +2,7 @@ package invertedindex
 
 import (
 	"github.com/emirpasic/gods/trees/redblacktree"
-	"github.com/getumen/sakuin/booleanexpression"
+	"github.com/getumen/sakuin/expression"
 	"github.com/getumen/sakuin/fieldindex"
 	"github.com/getumen/sakuin/posting"
 	"github.com/getumen/sakuin/postinglist"
@@ -35,7 +35,7 @@ func (i *InvertedIndex) Merge(other *InvertedIndex) {
 	}
 }
 
-func (i InvertedIndex) GetPostingListInFeature(feature *booleanexpression.BooleanFeature) *postinglist.PostingList {
+func (i InvertedIndex) GetPostingListInFeature(feature *expression.BooleanFeature) *postinglist.PostingList {
 	field := feature.Field()
 	cond := feature.TermCondition()
 	node, ok := i.Ceiling(cond.Start())
@@ -66,11 +66,11 @@ func (i InvertedIndex) GetPostingListInFeature(feature *booleanexpression.Boolea
 	return postinglist.Union(postingLists)
 }
 
-func (i InvertedIndex) Search(booleanExpression *booleanexpression.BooleanExpression) *postinglist.PostingList {
-	if booleanExpression.And() != nil {
+func (i InvertedIndex) Search(exp *expression.Expression) *postinglist.PostingList {
+	if exp.And() != nil {
 		sets := make([]*postinglist.PostingList, 0)
 		excludeSets := make([]*postinglist.PostingList, 0)
-		for _, be := range booleanExpression.And() {
+		for _, be := range exp.And() {
 			if be.Not() != nil {
 				set := i.Search(be.Not())
 				excludeSets = append(excludeSets, set)
@@ -80,24 +80,26 @@ func (i InvertedIndex) Search(booleanExpression *booleanexpression.BooleanExpres
 			}
 		}
 
-		excludeIntersection := postinglist.Intersection(excludeSets)
-
-		if booleanExpression.RelativePosition() == nil {
-			return postinglist.Difference(
-				postinglist.Intersection(sets),
-				excludeIntersection,
-			)
-		}
-
 		return postinglist.Difference(
-			postinglist.PhraseMatch(sets, booleanExpression.RelativePosition()),
-			excludeIntersection,
+			postinglist.Intersection(sets),
+			postinglist.Intersection(excludeSets),
 		)
 
 	}
-	if booleanExpression.Or() != nil {
+
+	if exp.Phrase() != nil {
 		sets := make([]*postinglist.PostingList, 0)
-		for _, be := range booleanExpression.Or() {
+		for _, be := range exp.Phrase() {
+			set := i.Search(be)
+			sets = append(sets, set)
+		}
+
+		return postinglist.PhraseMatch(sets, exp.RelativePosition())
+	}
+
+	if exp.Or() != nil {
+		sets := make([]*postinglist.PostingList, 0)
+		for _, be := range exp.Or() {
 			if be.Not() != nil {
 				continue
 			}
@@ -106,8 +108,8 @@ func (i InvertedIndex) Search(booleanExpression *booleanexpression.BooleanExpres
 		}
 		return postinglist.Union(sets)
 	}
-	if booleanExpression.Feature() != nil {
-		feature := booleanExpression.Feature()
+	if exp.Feature() != nil {
+		feature := exp.Feature()
 		postingList := i.GetPostingListInFeature(feature)
 		return postingList
 	}

@@ -1,58 +1,69 @@
-package booleanexpression
+package expression
 
 import (
 	"github.com/getumen/sakuin/fieldname"
 	"github.com/getumen/sakuin/termcond"
 )
 
-type BooleanExpression struct {
-	and              []*BooleanExpression
-	or               []*BooleanExpression
-	not              *BooleanExpression
+type Expression struct {
+	and              []*Expression
+	or               []*Expression
+	not              *Expression
+	phrase           []*Expression
 	relativePosition []int64
 	feature          *BooleanFeature
 }
 
-func NewAnd(arr []*BooleanExpression, relativePosition []int64) *BooleanExpression {
-	return &BooleanExpression{
-		and:              arr,
+func NewAnd(arr []*Expression) *Expression {
+	return &Expression{
+		and: arr,
+	}
+}
+
+func NewOr(arr []*Expression) *Expression {
+	return &Expression{or: arr}
+}
+
+func NewNot(value *Expression) *Expression {
+	return &Expression{not: value}
+}
+
+func NewPhrase(arr []*Expression, relativePosition []int64) *Expression {
+	return &Expression{
+		phrase:           arr,
 		relativePosition: relativePosition,
 	}
 }
 
-func NewOr(arr []*BooleanExpression) *BooleanExpression {
-	return &BooleanExpression{or: arr}
+func NewFeature(f *BooleanFeature) *Expression {
+	return &Expression{feature: f}
 }
 
-func NewNot(value *BooleanExpression) *BooleanExpression {
-	return &BooleanExpression{not: value}
-}
-
-func NewFeature(f *BooleanFeature) *BooleanExpression {
-	return &BooleanExpression{feature: f}
-}
-
-func (b BooleanExpression) And() []*BooleanExpression {
+func (b Expression) And() []*Expression {
 	return b.and
 }
 
-func (b BooleanExpression) RelativePosition() []int64 {
+func (b Expression) RelativePosition() []int64 {
 	return b.relativePosition
 }
 
-func (b BooleanExpression) Or() []*BooleanExpression {
+func (b Expression) Or() []*Expression {
 	return b.or
 }
 
-func (b BooleanExpression) Not() *BooleanExpression {
+func (b Expression) Not() *Expression {
 	return b.not
 }
 
-func (b BooleanExpression) Feature() *BooleanFeature {
+func (b Expression) Phrase() []*Expression {
+	return b.phrase
+}
+
+func (b Expression) Feature() *BooleanFeature {
 	return b.feature
 }
 
-func (b BooleanExpression) TermConditions() []*termcond.TermCondition {
+func (b Expression) TermConditions() []*termcond.TermCondition {
 	if b.feature != nil {
 		return []*termcond.TermCondition{b.feature.termCondition}
 	}
@@ -69,6 +80,12 @@ func (b BooleanExpression) TermConditions() []*termcond.TermCondition {
 
 	if b.or != nil {
 		for _, v := range b.or {
+			conds = append(conds, v.TermConditions()...)
+		}
+	}
+
+	if b.phrase != nil {
+		for _, v := range b.phrase {
 			conds = append(conds, v.TermConditions()...)
 		}
 	}

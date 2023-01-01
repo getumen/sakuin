@@ -1,38 +1,37 @@
-package booleanexpression_test
+package expression_test
 
 import (
 	"testing"
 
-	"github.com/getumen/sakuin/booleanexpression"
+	"github.com/getumen/sakuin/expression"
 	"github.com/getumen/sakuin/term"
 	"github.com/getumen/sakuin/termcond"
 	"github.com/stretchr/testify/require"
 )
 
-func TestBooleanExpression_TermConditions(t *testing.T) {
+func TestExpression_TermConditions(t *testing.T) {
 	tests := []struct {
 		name string
-		b    *booleanexpression.BooleanExpression
+		b    *expression.Expression
 		want []*termcond.TermCondition
 	}{
 		{
 			name: "equal",
-			b: booleanexpression.NewAnd(
-				[]*booleanexpression.BooleanExpression{
-					booleanexpression.NewFeature(
-						booleanexpression.NewBoolenaFeature(
+			b: expression.NewAnd(
+				[]*expression.Expression{
+					expression.NewFeature(
+						expression.NewBoolenaFeature(
 							"f1",
 							termcond.NewEqual(term.NewText("A")),
 						),
 					),
-					booleanexpression.NewFeature(
-						booleanexpression.NewBoolenaFeature(
+					expression.NewFeature(
+						expression.NewBoolenaFeature(
 							"f1",
 							termcond.NewEqual(term.NewText("B")),
 						),
 					),
 				},
-				nil,
 			),
 			want: []*termcond.TermCondition{
 				termcond.NewEqual(term.NewText("A")),
@@ -41,10 +40,10 @@ func TestBooleanExpression_TermConditions(t *testing.T) {
 		},
 		{
 			name: "range",
-			b: booleanexpression.NewAnd(
-				[]*booleanexpression.BooleanExpression{
-					booleanexpression.NewFeature(
-						booleanexpression.NewBoolenaFeature(
+			b: expression.NewAnd(
+				[]*expression.Expression{
+					expression.NewFeature(
+						expression.NewBoolenaFeature(
 							"f1",
 							termcond.NewRange(
 								term.NewInt64(1),
@@ -54,8 +53,8 @@ func TestBooleanExpression_TermConditions(t *testing.T) {
 							),
 						),
 					),
-					booleanexpression.NewFeature(
-						booleanexpression.NewBoolenaFeature(
+					expression.NewFeature(
+						expression.NewBoolenaFeature(
 							"f1",
 							termcond.NewRange(
 								term.NewInt64(3),
@@ -66,7 +65,6 @@ func TestBooleanExpression_TermConditions(t *testing.T) {
 						),
 					),
 				},
-				nil,
 			),
 			want: []*termcond.TermCondition{
 				termcond.NewRange(
