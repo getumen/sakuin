@@ -57,20 +57,20 @@ func (p PostingList) Len() int {
 	return len(p.postingList)
 }
 
-func Intersection(postingLists []*PostingList, relativePosition []int64) *PostingList {
-
+func PhraseMatch(postingLists []*PostingList, relativePosition []int64) *PostingList {
 	if len(postingLists) == 0 {
 		return NewPostingList(make([]*posting.Posting, 0))
 	}
 
 	postingListCursors := make([]*PostingListCursor, len(postingLists))
-	var maxDocID int64 = 0
+	maxPosting := posting.NewPosting(0, nil)
+
 	for i := range postingLists {
 		if postingLists[i].Len() == 0 {
 			return NewPostingList(make([]*posting.Posting, 0))
 		}
 		postingListCursors[i] = postingLists[i].Cursor()
-		maxDocID = max(maxDocID, postingListCursors[i].Current().GetDocID())
+		maxPosting = maxPosting.Max(postingListCursors[i].Value())
 	}
 
 	result := make([]*posting.Posting, 0)
@@ -78,16 +78,16 @@ func Intersection(postingLists []*PostingList, relativePosition []int64) *Postin
 POSTING_LOOP:
 	for {
 		matchCount := 0
-		for postingListCursorIndex := range postingListCursors {
+		// すべてのカーソルに存在するdocIDを探す
+		for index := range postingListCursors {
+			cursor := postingListCursors[index]
 
-			if postingListCursors[postingListCursorIndex].Current().GetDocID() < maxDocID {
-				postingListCursors[postingListCursorIndex].Skip(maxDocID)
+			if cursor.Value().GetDocID() < maxPosting.GetDocID() {
 				// カーソルを読み終わったら終了
-				if !postingListCursors[postingListCursorIndex].Valid() {
+				if !cursor.Skip(maxPosting) {
 					break POSTING_LOOP
 				}
-				// カーソルが読み終わっていなかったらmaxDocIDを更新して次のmatchCountのカウントへ
-				maxDocID = max(maxDocID, postingListCursors[postingListCursorIndex].Current().GetDocID())
+				maxPosting = maxPosting.Max(cursor.Value())
 				break
 			}
 			matchCount++
@@ -95,43 +95,117 @@ POSTING_LOOP:
 		if matchCount < len(postingListCursors) {
 			continue
 		}
-		// 空の場合はフレーズマッチではないので、DocIDの積を返す
-		if relativePosition == nil {
-			result = append(result, posting.NewPosting(maxDocID, nil))
-			// 次のドキュメントを探す
-			maxDocID++
-			continue
-		}
+
+		// positionがマッチするかを探索
 		positionCursors := make([]*position.PositionsCursor, len(postingListCursors))
 		for i, v := range postingListCursors {
-			positionCursors[i] = v.Current().GetPositions().Cursor()
+			positionCursors[i] = v.Value().GetPositions().Cursor()
 		}
+
+		if positionCursors[0].Len() == 0 {
+			for index := range postingListCursors {
+				if !postingListCursors[index].Next() {
+					break POSTING_LOOP
+				}
+			}
+		}
+
+		matchPositions := make([]int64, 0)
 
 	POSITION_LOOP:
 		for {
-			positionMatchCount := 0
-			var currentOffset int64
-			for positionCursorIndex := range positionCursors {
-				if positionCursorIndex == 0 {
-					positionMatchCount++
-					currentOffset = positionCursors[positionCursorIndex].Current()
-					continue
-				}
-				for positionCursors[positionCursorIndex].Current() < currentOffset+relativePosition[positionCursorIndex] {
-					positionCursors[positionCursorIndex].Skip(currentOffset + relativePosition[positionCursorIndex])
-					if !positionCursors[positionCursorIndex].Valid() {
+			positionMatchCount := 1
+			currentOffset := positionCursors[0].Value()
+			for index := 1; index < len(positionCursors); index++ {
+				absolutePosition := currentOffset + relativePosition[index]
+				for positionCursors[index].Value() < absolutePosition {
+					if !positionCursors[index].Skip(absolutePosition) {
 						break POSITION_LOOP
 					}
 				}
-				if positionCursors[positionCursorIndex].Current() == currentOffset+relativePosition[positionCursorIndex] {
+				if positionCursors[index].Value() == absolutePosition {
 					positionMatchCount++
 				}
 			}
+
 			if positionMatchCount == len(positionCursors) {
-				result = append(result, posting.NewPosting(maxDocID, nil))
-				// 次のドキュメントを探す
-				maxDocID++
+				matchPositions = append(matchPositions, positionCursors[0].Value())
+			}
+			if !positionCursors[0].Next() {
 				break POSITION_LOOP
+			}
+		}
+		if len(matchPositions) > 0 {
+			result = append(
+				result,
+				posting.NewPosting(
+					postingListCursors[0].Value().GetDocID(),
+					position.NewPositions(matchPositions),
+				),
+			)
+		}
+
+		for index := range postingListCursors {
+			cursor := postingListCursors[index]
+			if !cursor.Next() {
+				break POSTING_LOOP
+			}
+			maxPosting = maxPosting.Max(cursor.Value())
+		}
+	}
+
+	return NewPostingList(result)
+}
+
+func Intersection(postingLists []*PostingList) *PostingList {
+	if len(postingLists) == 0 {
+		return NewPostingList(make([]*posting.Posting, 0))
+	}
+
+	postingListCursors := make([]*PostingListCursor, len(postingLists))
+	maxPosting := posting.NewPosting(0, nil)
+	for i := range postingLists {
+		if postingLists[i].Len() == 0 {
+			return NewPostingList(make([]*posting.Posting, 0))
+		}
+		postingListCursors[i] = postingLists[i].Cursor()
+		maxPosting = maxPosting.Max(postingListCursors[i].Value())
+	}
+
+	result := make([]*posting.Posting, 0)
+
+POSTING_LOOP:
+	for {
+		matchCount := 0
+		// すべてのカーソルに存在するdocIDを探す
+		for index := range postingListCursors {
+			if postingListCursors[index].Value().Compare(maxPosting) < 0 {
+				// カーソルを読み終わったら終了
+				if !postingListCursors[index].Skip(maxPosting) {
+					break POSTING_LOOP
+				}
+				maxPosting = maxPosting.Max(postingListCursors[index].Value())
+				break
+			}
+			matchCount++
+		}
+		if matchCount < len(postingListCursors) {
+			continue
+		}
+
+		// positionをマージ
+		var posting *posting.Posting
+		for _, v := range postingListCursors {
+			if posting == nil {
+				posting = v.Value().Copy()
+				continue
+			}
+			posting.Merge(v.Value())
+		}
+		result = append(result, posting)
+		for _, v := range postingListCursors {
+			if !v.Next() {
+				break POSTING_LOOP
 			}
 		}
 	}
@@ -144,7 +218,7 @@ type unionHeap []*PostingListCursor
 func (h unionHeap) Len() int { return len(h) }
 
 func (h unionHeap) Less(i, j int) bool {
-	return h[i].Current().GetDocID() < h[j].Current().GetDocID()
+	return h[i].Compare(h[j]) < 0
 }
 
 func (h unionHeap) Swap(i, j int) {
@@ -175,25 +249,26 @@ func Union(postingLists []*PostingList) *PostingList {
 
 	postingListCursors := make(unionHeap, 0)
 	for i := range postingLists {
-		cursor := postingLists[i].Cursor()
-		if cursor.Valid() {
-			postingListCursors = append(postingListCursors, cursor)
+		if postingLists[i].Len() > 0 {
+			postingListCursors = append(postingListCursors, postingLists[i].Cursor())
 		}
 	}
 	heap.Init(&postingListCursors)
 
 	result := make([]*posting.Posting, 0)
 
-	var minDocID int64
+	minPosting := posting.NewPosting(0, nil)
 
 	for postingListCursors.Len() > 0 {
 		cursor := heap.Pop(&postingListCursors).(*PostingListCursor)
-		if cursor.Current().GetDocID() != minDocID {
-			minDocID = cursor.Current().GetDocID()
-			result = append(result, posting.NewPosting(minDocID, nil))
+		if cursor.Value().Compare(minPosting) != 0 {
+			minPosting = cursor.Value().Copy()
+			result = append(result, minPosting)
+		} else {
+			// merge positions
+			result[len(result)-1].Merge(cursor.Value())
 		}
-		cursor.Next()
-		if cursor.Valid() {
+		if cursor.Next() {
 			heap.Push(&postingListCursors, cursor)
 		}
 	}
@@ -205,20 +280,46 @@ func Difference(x, y *PostingList) *PostingList {
 	yCursor := y.Cursor()
 
 	result := make([]*posting.Posting, 0)
-	for xCursor.Valid() {
-		if !yCursor.Valid() {
-			for xCursor.Valid() {
-				result = append(result, xCursor.Next())
-			}
-			break
-		}
-		xPosting := xCursor.Next()
-		yCursor.Skip(xPosting.GetDocID())
 
-		if yCursor.Valid() && yCursor.Current().GetDocID() == xPosting.GetDocID() {
+	if xCursor.Len() == 0 {
+		return NewPostingList(result)
+	}
+	if yCursor.Len() == 0 {
+		for {
+			result = append(result, xCursor.Value())
+			if !xCursor.Next() {
+				break
+			}
+		}
+		return NewPostingList(result)
+	}
+
+LOOP:
+	for {
+		if xCursor.Compare(yCursor) < 0 {
+			result = append(result, x.Cursor().Value())
+			if !xCursor.Next() {
+				break
+			}
 			continue
 		}
-		result = append(result, xPosting)
+		if xCursor.Compare(yCursor) == 0 {
+			if !yCursor.Next() {
+				for xCursor.Next() {
+					result = append(result, xCursor.Value())
+					break LOOP
+				}
+			}
+			if !xCursor.Next() {
+				break
+			}
+		}
+		if !yCursor.Skip(xCursor.Value()) {
+			for !xCursor.Next() {
+				result = append(result, xCursor.Value())
+				break LOOP
+			}
+		}
 	}
 
 	return NewPostingList(result)
