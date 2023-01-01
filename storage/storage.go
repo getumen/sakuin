@@ -11,9 +11,9 @@ type IndexStorage interface {
 	Merge(
 		ctx context.Context,
 		index *invertedindex.InvertedIndex,
-	) (err error)
+	) error
 	GetIndex(
 		ctx context.Context,
-		terms []*termcond.TermCondition,
-	) (index *invertedindex.InvertedIndex, err error)
+		conds []*termcond.TermCondition,
+	) (*invertedindex.InvertedIndex, error)
 }

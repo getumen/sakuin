@@ -18,7 +18,7 @@ type IndexWriter struct {
 	storage storage.IndexStorage
 }
 
-func NewWriter(
+func NewIndexWriter(
 	storage storage.IndexStorage,
 ) *IndexWriter {
 	return &IndexWriter{

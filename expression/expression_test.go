@@ -20,13 +20,13 @@ func TestExpression_TermConditions(t *testing.T) {
 			b: expression.NewAnd(
 				[]*expression.Expression{
 					expression.NewFeature(
-						expression.NewBoolenaFeature(
+						expression.NewFeatureSpec(
 							"f1",
 							termcond.NewEqual(term.NewText("A")),
 						),
 					),
 					expression.NewFeature(
-						expression.NewBoolenaFeature(
+						expression.NewFeatureSpec(
 							"f1",
 							termcond.NewEqual(term.NewText("B")),
 						),
@@ -43,7 +43,7 @@ func TestExpression_TermConditions(t *testing.T) {
 			b: expression.NewAnd(
 				[]*expression.Expression{
 					expression.NewFeature(
-						expression.NewBoolenaFeature(
+						expression.NewFeatureSpec(
 							"f1",
 							termcond.NewRange(
 								term.NewInt64(1),
@@ -54,7 +54,7 @@ func TestExpression_TermConditions(t *testing.T) {
 						),
 					),
 					expression.NewFeature(
-						expression.NewBoolenaFeature(
+						expression.NewFeatureSpec(
 							"f1",
 							termcond.NewRange(
 								term.NewInt64(3),

@@ -11,7 +11,7 @@ type Expression struct {
 	not              *Expression
 	phrase           []*Expression
 	relativePosition []int64
-	feature          *BooleanFeature
+	feature          *FeatureSpec
 }
 
 func NewAnd(arr []*Expression) *Expression {
@@ -35,7 +35,7 @@ func NewPhrase(arr []*Expression, relativePosition []int64) *Expression {
 	}
 }
 
-func NewFeature(f *BooleanFeature) *Expression {
+func NewFeature(f *FeatureSpec) *Expression {
 	return &Expression{feature: f}
 }
 
@@ -59,7 +59,7 @@ func (b Expression) Phrase() []*Expression {
 	return b.phrase
 }
 
-func (b Expression) Feature() *BooleanFeature {
+func (b Expression) Feature() *FeatureSpec {
 	return b.feature
 }
 
@@ -93,25 +93,25 @@ func (b Expression) TermConditions() []*termcond.TermCondition {
 	return termcond.Simplify(conds)
 }
 
-type BooleanFeature struct {
+type FeatureSpec struct {
 	field         fieldname.FieldName
 	termCondition *termcond.TermCondition
 }
 
-func NewBoolenaFeature(
+func NewFeatureSpec(
 	field fieldname.FieldName,
 	termCondition *termcond.TermCondition,
-) *BooleanFeature {
-	return &BooleanFeature{
+) *FeatureSpec {
+	return &FeatureSpec{
 		field:         field,
 		termCondition: termCondition,
 	}
 }
 
-func (f BooleanFeature) TermCondition() *termcond.TermCondition {
+func (f FeatureSpec) TermCondition() *termcond.TermCondition {
 	return f.termCondition
 }
 
-func (f BooleanFeature) Field() fieldname.FieldName {
+func (f FeatureSpec) Field() fieldname.FieldName {
 	return f.field
 }
