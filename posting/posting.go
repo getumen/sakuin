@@ -21,12 +21,26 @@ func (p Posting) Compare(other *Posting) int {
 	return int(p.docID) - int(other.docID)
 }
 
+func (p *Posting) Max(other *Posting) *Posting {
+	if p.docID < other.docID {
+		return other
+	}
+	return p
+}
+
 func (p Posting) GetDocID() int64 {
 	return p.docID
 }
 
 func (p Posting) GetPositions() *position.Positions {
 	return p.positions
+}
+
+func (p Posting) Copy() *Posting {
+	return &Posting{
+		docID:     p.docID,
+		positions: p.positions.Copy(),
+	}
 }
 
 func (p *Posting) Merge(other *Posting) {

@@ -2,11 +2,12 @@ package invertedindex
 
 import (
 	"github.com/emirpasic/gods/trees/redblacktree"
-	"github.com/getumen/sakuin/booleanexpression"
+	"github.com/getumen/sakuin/expression"
 	"github.com/getumen/sakuin/fieldindex"
 	"github.com/getumen/sakuin/posting"
 	"github.com/getumen/sakuin/postinglist"
 	"github.com/getumen/sakuin/term"
+	"github.com/getumen/sakuin/termcond"
 )
 
 type InvertedIndex struct {
@@ -35,7 +36,7 @@ func (i *InvertedIndex) Merge(other *InvertedIndex) {
 	}
 }
 
-func (i InvertedIndex) GetPostingListInFeature(feature *booleanexpression.BooleanFeature) *postinglist.PostingList {
+func (i InvertedIndex) GetPostingListInFeature(feature *expression.FeatureSpec) *postinglist.PostingList {
 	field := feature.Field()
 	cond := feature.TermCondition()
 	node, ok := i.Ceiling(cond.Start())
@@ -66,11 +67,11 @@ func (i InvertedIndex) GetPostingListInFeature(feature *booleanexpression.Boolea
 	return postinglist.Union(postingLists)
 }
 
-func (i InvertedIndex) Search(booleanExpression *booleanexpression.BooleanExpression) *postinglist.PostingList {
-	if booleanExpression.And() != nil {
+func (i InvertedIndex) Search(exp *expression.Expression) *postinglist.PostingList {
+	if exp.And() != nil {
 		sets := make([]*postinglist.PostingList, 0)
 		excludeSets := make([]*postinglist.PostingList, 0)
-		for _, be := range booleanExpression.And() {
+		for _, be := range exp.And() {
 			if be.Not() != nil {
 				set := i.Search(be.Not())
 				excludeSets = append(excludeSets, set)
@@ -79,17 +80,27 @@ func (i InvertedIndex) Search(booleanExpression *booleanexpression.BooleanExpres
 				sets = append(sets, set)
 			}
 		}
-		intersection := postinglist.Intersection(
-			sets,
-			booleanExpression.RelativePosition(),
-		)
-		excludeIntersection := postinglist.Intersection(excludeSets, nil)
 
-		return postinglist.Difference(intersection, excludeIntersection)
+		return postinglist.Difference(
+			postinglist.Intersection(sets),
+			postinglist.Intersection(excludeSets),
+		)
+
 	}
-	if booleanExpression.Or() != nil {
+
+	if exp.Phrase() != nil {
 		sets := make([]*postinglist.PostingList, 0)
-		for _, be := range booleanExpression.Or() {
+		for _, be := range exp.Phrase() {
+			set := i.Search(be)
+			sets = append(sets, set)
+		}
+
+		return postinglist.PhraseMatch(sets, exp.RelativePosition())
+	}
+
+	if exp.Or() != nil {
+		sets := make([]*postinglist.PostingList, 0)
+		for _, be := range exp.Or() {
 			if be.Not() != nil {
 				continue
 			}
@@ -98,10 +109,38 @@ func (i InvertedIndex) Search(booleanExpression *booleanexpression.BooleanExpres
 		}
 		return postinglist.Union(sets)
 	}
-	if booleanExpression.Feature() != nil {
-		feature := booleanExpression.Feature()
+	if exp.Feature() != nil {
+		feature := exp.Feature()
 		postingList := i.GetPostingListInFeature(feature)
 		return postingList
 	}
 	return postinglist.NewPostingList(make([]*posting.Posting, 0))
+}
+
+func (i InvertedIndex) GetPartialIndex(conds []*termcond.TermCondition) *InvertedIndex {
+	result := NewInvertedIndex()
+	for _, cond := range conds {
+		node, ok := i.Ceiling(cond.Start())
+		if !ok {
+			continue
+		}
+		it := i.IteratorAt(node)
+
+		for {
+			key := it.Key().(term.Term)
+			if !cond.IncludeStart() && term.Comparator(key, cond.Start()) == 0 {
+				continue
+			}
+			if (term.Comparator(key, cond.End()) == 0 && !cond.IncludeEnd()) ||
+				term.Comparator(key, cond.End()) > 0 {
+				break
+			}
+			fieldIndex := it.Value().(fieldindex.FieldIndex)
+			result.Put(key, fieldIndex)
+			if !it.Next() {
+				break
+			}
+		}
+	}
+	return result
 }

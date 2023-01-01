@@ -10,7 +10,7 @@ import (
 func TestBinarySearch(t *testing.T) {
 	type args struct {
 		sortedArray []*posting.Posting
-		docID       int64
+		posting     *posting.Posting
 	}
 	tests := []struct {
 		name string
@@ -32,7 +32,7 @@ func TestBinarySearch(t *testing.T) {
 					posting.NewPosting(45, nil),
 					posting.NewPosting(55, nil),
 				},
-				docID: 6,
+				posting: posting.NewPosting(6, nil),
 			},
 			want: 2,
 		},
@@ -51,14 +51,14 @@ func TestBinarySearch(t *testing.T) {
 					posting.NewPosting(45, nil),
 					posting.NewPosting(55, nil),
 				},
-				docID: 14,
+				posting: posting.NewPosting(14, nil),
 			},
 			want: 4,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got := posting.BinarySearch(tt.args.sortedArray, tt.args.docID)
+			got := posting.BinarySearch(tt.args.sortedArray, tt.args.posting)
 			require.Equal(t, tt.want, got)
 		})
 	}
@@ -67,7 +67,7 @@ func TestBinarySearch(t *testing.T) {
 func TestExponentialSearch(t *testing.T) {
 	type args struct {
 		sortedArray []*posting.Posting
-		docID       int64
+		posting     *posting.Posting
 	}
 	tests := []struct {
 		name string
@@ -89,7 +89,7 @@ func TestExponentialSearch(t *testing.T) {
 					posting.NewPosting(45, nil),
 					posting.NewPosting(55, nil),
 				},
-				docID: 6,
+				posting: posting.NewPosting(6, nil),
 			},
 			want: 2,
 		},
@@ -108,14 +108,14 @@ func TestExponentialSearch(t *testing.T) {
 					posting.NewPosting(45, nil),
 					posting.NewPosting(55, nil),
 				},
-				docID: 14,
+				posting: posting.NewPosting(14, nil),
 			},
 			want: 4,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got := posting.ExponentialSearch(tt.args.sortedArray, tt.args.docID)
+			got := posting.ExponentialSearch(tt.args.sortedArray, tt.args.posting)
 			require.Equal(t, tt.want, got)
 		})
 	}

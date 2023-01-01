@@ -14,20 +14,23 @@ func NewPostingListCursor(p PostingList) *PostingListCursor {
 	}
 }
 
-func (p PostingListCursor) Current() *posting.Posting {
+func (p PostingListCursor) Value() *posting.Posting {
 	return p.postingList[p.cursor]
 }
 
-func (p *PostingListCursor) Skip(docID int64) {
-	p.cursor += posting.ExponentialSearch(p.postingList[p.cursor:], docID)
+func (p *PostingListCursor) Skip(otherPosting *posting.Posting) bool {
+	p.cursor += posting.ExponentialSearch(
+		p.postingList[p.cursor:],
+		otherPosting,
+	)
+	return p.cursor < p.Len()
 }
 
-func (p *PostingListCursor) Next() *posting.Posting {
-	result := p.postingList[p.cursor]
+func (p *PostingListCursor) Next() bool {
 	p.cursor++
-	return result
+	return p.cursor < p.Len()
 }
 
-func (p PostingListCursor) Valid() bool {
-	return p.cursor < len(p.postingList)
+func (p *PostingListCursor) Compare(other *PostingListCursor) int {
+	return p.Value().Compare(other.Value())
 }

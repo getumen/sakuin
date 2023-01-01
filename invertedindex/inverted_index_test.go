@@ -3,7 +3,7 @@ package invertedindex_test
 import (
 	"testing"
 
-	"github.com/getumen/sakuin/booleanexpression"
+	"github.com/getumen/sakuin/expression"
 	"github.com/getumen/sakuin/fieldindex"
 	"github.com/getumen/sakuin/fieldname"
 	"github.com/getumen/sakuin/invertedindex"
@@ -17,7 +17,7 @@ import (
 
 func TestInvertedIndex_Search(t *testing.T) {
 	type args struct {
-		booleanExpression *booleanexpression.BooleanExpression
+		exp *expression.Expression
 	}
 	tests := []struct {
 		name string
@@ -26,7 +26,7 @@ func TestInvertedIndex_Search(t *testing.T) {
 		want *postinglist.PostingList
 	}{
 		{
-			name: "search a and b",
+			name: "search ab",
 			get: func() *invertedindex.InvertedIndex {
 				result := invertedindex.NewInvertedIndex()
 				result.Put(
@@ -36,7 +36,7 @@ func TestInvertedIndex_Search(t *testing.T) {
 							"f1": postinglist.NewPostingList(
 								[]*posting.Posting{
 									posting.NewPosting(1, position.NewPositions([]int64{1, 5, 7})),
-									posting.NewPosting(2, position.NewPositions([]int64{1, 5, 7})),
+									posting.NewPosting(2, position.NewPositions([]int64{3, 5, 7})),
 								},
 							),
 						},
@@ -59,23 +59,24 @@ func TestInvertedIndex_Search(t *testing.T) {
 				return result
 			},
 			args: args{
-				booleanExpression: booleanexpression.NewAnd(
-					[]*booleanexpression.BooleanExpression{
-						booleanexpression.NewFeature(
-							booleanexpression.NewBoolenaFeature(
+				exp: expression.NewPhrase(
+					[]*expression.Expression{
+						expression.NewFeature(
+							expression.NewFeatureSpec(
 								"f1",
 								termcond.NewEqual(term.NewText("a"))),
 						),
-						booleanexpression.NewFeature(
-							booleanexpression.NewBoolenaFeature("f1", termcond.NewEqual(term.NewText("b"))),
+						expression.NewFeature(
+							expression.NewFeatureSpec(
+								"f1",
+								termcond.NewEqual(term.NewText("b"))),
 						),
 					},
 					[]int64{0, 1},
 				),
 			},
 			want: postinglist.NewPostingList([]*posting.Posting{
-				posting.NewPosting(1, nil),
-				posting.NewPosting(2, nil),
+				posting.NewPosting(1, position.NewPositions([]int64{1})),
 			}),
 		},
 		{
@@ -111,25 +112,24 @@ func TestInvertedIndex_Search(t *testing.T) {
 				return result
 			},
 			args: args{
-				booleanExpression: booleanexpression.NewAnd(
-					[]*booleanexpression.BooleanExpression{
-						booleanexpression.NewFeature(
-							booleanexpression.NewBoolenaFeature(
+				exp: expression.NewAnd(
+					[]*expression.Expression{
+						expression.NewFeature(
+							expression.NewFeatureSpec(
 								"f1",
 								termcond.NewEqual(term.NewText("a"))),
 						),
-						booleanexpression.NewNot(
-							booleanexpression.NewFeature(
-								booleanexpression.NewBoolenaFeature(
+						expression.NewNot(
+							expression.NewFeature(
+								expression.NewFeatureSpec(
 									"f1", termcond.NewEqual(term.NewText("b"))),
 							),
 						),
 					},
-					nil,
 				),
 			},
 			want: postinglist.NewPostingList([]*posting.Posting{
-				posting.NewPosting(2, nil),
+				posting.NewPosting(2, position.NewPositions([]int64{1, 5, 7})),
 			}),
 		},
 		{
@@ -161,15 +161,15 @@ func TestInvertedIndex_Search(t *testing.T) {
 				return result
 			},
 			args: args{
-				booleanExpression: booleanexpression.NewOr(
-					[]*booleanexpression.BooleanExpression{
-						booleanexpression.NewFeature(
-							booleanexpression.NewBoolenaFeature(
+				exp: expression.NewOr(
+					[]*expression.Expression{
+						expression.NewFeature(
+							expression.NewFeatureSpec(
 								"f1",
 								termcond.NewEqual(term.NewText("a"))),
 						),
-						booleanexpression.NewFeature(
-							booleanexpression.NewBoolenaFeature(
+						expression.NewFeature(
+							expression.NewFeatureSpec(
 								"f1",
 								termcond.NewEqual(term.NewText("b"))),
 						),
@@ -177,13 +177,13 @@ func TestInvertedIndex_Search(t *testing.T) {
 				),
 			},
 			want: postinglist.NewPostingList([]*posting.Posting{
-				posting.NewPosting(1, nil),
-				posting.NewPosting(2, nil),
-				posting.NewPosting(3, nil),
+				posting.NewPosting(1, position.NewPositions([]int64{1, 5, 7})),
+				posting.NewPosting(2, position.NewPositions([]int64{1, 5, 7})),
+				posting.NewPosting(3, position.NewPositions([]int64{2})),
 			}),
 		},
 		{
-			name: "search (a and b) and not (c and d)",
+			name: "search ab and not cd",
 			get: func() *invertedindex.InvertedIndex {
 				result := invertedindex.NewInvertedIndex()
 				result.Put(
@@ -232,31 +232,31 @@ func TestInvertedIndex_Search(t *testing.T) {
 				return result
 			},
 			args: args{
-				booleanExpression: booleanexpression.NewAnd(
-					[]*booleanexpression.BooleanExpression{
-						booleanexpression.NewAnd([]*booleanexpression.BooleanExpression{
-							booleanexpression.NewFeature(
-								booleanexpression.NewBoolenaFeature(
+				exp: expression.NewAnd(
+					[]*expression.Expression{
+						expression.NewPhrase([]*expression.Expression{
+							expression.NewFeature(
+								expression.NewFeatureSpec(
 									"f1",
 									termcond.NewEqual(term.NewText("a"))),
 							),
-							booleanexpression.NewFeature(
-								booleanexpression.NewBoolenaFeature(
+							expression.NewFeature(
+								expression.NewFeatureSpec(
 									"f1",
 									termcond.NewEqual(term.NewText("b"))),
 							),
 						},
 							[]int64{0, 1},
 						),
-						booleanexpression.NewNot(
-							booleanexpression.NewAnd([]*booleanexpression.BooleanExpression{
-								booleanexpression.NewFeature(
-									booleanexpression.NewBoolenaFeature(
+						expression.NewNot(
+							expression.NewPhrase([]*expression.Expression{
+								expression.NewFeature(
+									expression.NewFeatureSpec(
 										"f1",
 										termcond.NewEqual(term.NewText("c"))),
 								),
-								booleanexpression.NewFeature(
-									booleanexpression.NewBoolenaFeature(
+								expression.NewFeature(
+									expression.NewFeatureSpec(
 										"f1",
 										termcond.NewEqual(term.NewText("d"))),
 								),
@@ -265,15 +265,14 @@ func TestInvertedIndex_Search(t *testing.T) {
 							),
 						),
 					},
-					nil,
 				),
 			},
 			want: postinglist.NewPostingList([]*posting.Posting{
-				posting.NewPosting(2, nil),
+				posting.NewPosting(2, position.NewPositions([]int64{1})),
 			}),
 		},
 		{
-			name: "search ((a and b) and not (c and d)) or e",
+			name: "search (ab and not cd) or e",
 			get: func() *invertedindex.InvertedIndex {
 				result := invertedindex.NewInvertedIndex()
 				result.Put(
@@ -332,33 +331,33 @@ func TestInvertedIndex_Search(t *testing.T) {
 				return result
 			},
 			args: args{
-				booleanExpression: booleanexpression.NewOr(
-					[]*booleanexpression.BooleanExpression{
-						booleanexpression.NewAnd(
-							[]*booleanexpression.BooleanExpression{
-								booleanexpression.NewAnd([]*booleanexpression.BooleanExpression{
-									booleanexpression.NewFeature(
-										booleanexpression.NewBoolenaFeature(
+				exp: expression.NewOr(
+					[]*expression.Expression{
+						expression.NewAnd(
+							[]*expression.Expression{
+								expression.NewPhrase([]*expression.Expression{
+									expression.NewFeature(
+										expression.NewFeatureSpec(
 											"f1",
 											termcond.NewEqual(term.NewText("a"))),
 									),
-									booleanexpression.NewFeature(
-										booleanexpression.NewBoolenaFeature(
+									expression.NewFeature(
+										expression.NewFeatureSpec(
 											"f1",
 											termcond.NewEqual(term.NewText("b"))),
 									),
 								},
 									[]int64{0, 1},
 								),
-								booleanexpression.NewNot(
-									booleanexpression.NewAnd([]*booleanexpression.BooleanExpression{
-										booleanexpression.NewFeature(
-											booleanexpression.NewBoolenaFeature(
+								expression.NewNot(
+									expression.NewPhrase([]*expression.Expression{
+										expression.NewFeature(
+											expression.NewFeatureSpec(
 												"f1",
 												termcond.NewEqual(term.NewText("c"))),
 										),
-										booleanexpression.NewFeature(
-											booleanexpression.NewBoolenaFeature(
+										expression.NewFeature(
+											expression.NewFeatureSpec(
 												"f1",
 												termcond.NewEqual(term.NewText("d"))),
 										),
@@ -367,25 +366,24 @@ func TestInvertedIndex_Search(t *testing.T) {
 									),
 								),
 							},
-							nil,
 						),
-						booleanexpression.NewFeature(
-							booleanexpression.NewBoolenaFeature(
+						expression.NewFeature(
+							expression.NewFeatureSpec(
 								"f1",
 								termcond.NewEqual(term.NewText("e")))),
 					},
 				),
 			},
 			want: postinglist.NewPostingList([]*posting.Posting{
-				posting.NewPosting(2, nil),
-				posting.NewPosting(3, nil),
+				posting.NewPosting(2, position.NewPositions([]int64{1})),
+				posting.NewPosting(3, position.NewPositions([]int64{1})),
 			}),
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			target := tt.get()
-			got := target.Search(tt.args.booleanExpression)
+			got := target.Search(tt.args.exp)
 			require.Equal(t, tt.want, got)
 		})
 	}
@@ -393,7 +391,7 @@ func TestInvertedIndex_Search(t *testing.T) {
 
 func TestInvertedIndex_GetPostingListInFeature(t *testing.T) {
 	type args struct {
-		feature *booleanexpression.BooleanFeature
+		feature *expression.FeatureSpec
 	}
 	tests := []struct {
 		name string
@@ -431,7 +429,7 @@ func TestInvertedIndex_GetPostingListInFeature(t *testing.T) {
 				return result
 			},
 			args: args{
-				feature: booleanexpression.NewBoolenaFeature(
+				feature: expression.NewFeatureSpec(
 					"f1",
 					termcond.NewEqual(term.NewText("a")),
 				),
@@ -481,7 +479,7 @@ func TestInvertedIndex_GetPostingListInFeature(t *testing.T) {
 				return result
 			},
 			args: args{
-				feature: booleanexpression.NewBoolenaFeature(
+				feature: expression.NewFeatureSpec(
 					"f1",
 					termcond.NewRange(
 						term.NewText("a"),
@@ -492,9 +490,9 @@ func TestInvertedIndex_GetPostingListInFeature(t *testing.T) {
 				),
 			},
 			want: postinglist.NewPostingList([]*posting.Posting{
-				posting.NewPosting(1, nil),
-				posting.NewPosting(2, nil),
-				posting.NewPosting(3, nil),
+				posting.NewPosting(1, position.NewPositions([]int64{1, 2, 5, 7})),
+				posting.NewPosting(2, position.NewPositions([]int64{1, 5, 7})),
+				posting.NewPosting(3, position.NewPositions([]int64{2})),
 			}),
 		},
 	}
