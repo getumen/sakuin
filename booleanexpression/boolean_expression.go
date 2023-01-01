@@ -14,7 +14,10 @@ type BooleanExpression struct {
 }
 
 func NewAnd(arr []*BooleanExpression, relativePosition []int64) *BooleanExpression {
-	return &BooleanExpression{and: arr, relativePosition: relativePosition}
+	return &BooleanExpression{
+		and:              arr,
+		relativePosition: relativePosition,
+	}
 }
 
 func NewOr(arr []*BooleanExpression) *BooleanExpression {

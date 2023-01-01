@@ -79,13 +79,21 @@ func (i InvertedIndex) Search(booleanExpression *booleanexpression.BooleanExpres
 				sets = append(sets, set)
 			}
 		}
-		intersection := postinglist.Intersection(
-			sets,
-			booleanExpression.RelativePosition(),
-		)
-		excludeIntersection := postinglist.Intersection(excludeSets, nil)
 
-		return postinglist.Difference(intersection, excludeIntersection)
+		excludeIntersection := postinglist.Intersection(excludeSets)
+
+		if booleanExpression.RelativePosition() == nil {
+			return postinglist.Difference(
+				postinglist.Intersection(sets),
+				excludeIntersection,
+			)
+		}
+
+		return postinglist.Difference(
+			postinglist.PhraseMatch(sets, booleanExpression.RelativePosition()),
+			excludeIntersection,
+		)
+
 	}
 	if booleanExpression.Or() != nil {
 		sets := make([]*postinglist.PostingList, 0)

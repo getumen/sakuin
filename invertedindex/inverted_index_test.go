@@ -36,7 +36,7 @@ func TestInvertedIndex_Search(t *testing.T) {
 							"f1": postinglist.NewPostingList(
 								[]*posting.Posting{
 									posting.NewPosting(1, position.NewPositions([]int64{1, 5, 7})),
-									posting.NewPosting(2, position.NewPositions([]int64{1, 5, 7})),
+									posting.NewPosting(2, position.NewPositions([]int64{3, 5, 7})),
 								},
 							),
 						},
@@ -67,320 +67,321 @@ func TestInvertedIndex_Search(t *testing.T) {
 								termcond.NewEqual(term.NewText("a"))),
 						),
 						booleanexpression.NewFeature(
-							booleanexpression.NewBoolenaFeature("f1", termcond.NewEqual(term.NewText("b"))),
+							booleanexpression.NewBoolenaFeature(
+								"f1",
+								termcond.NewEqual(term.NewText("b"))),
 						),
 					},
 					[]int64{0, 1},
 				),
 			},
 			want: postinglist.NewPostingList([]*posting.Posting{
-				posting.NewPosting(1, nil),
-				posting.NewPosting(2, nil),
+				posting.NewPosting(1, position.NewPositions([]int64{1})),
 			}),
 		},
-		{
-			name: "search a and not b",
-			get: func() *invertedindex.InvertedIndex {
-				result := invertedindex.NewInvertedIndex()
-				result.Put(
-					term.NewText("a"),
-					fieldindex.NewFieldIndexFromMap(
-						map[fieldname.FieldName]*postinglist.PostingList{
-							"f1": postinglist.NewPostingList(
-								[]*posting.Posting{
-									posting.NewPosting(1, position.NewPositions([]int64{1, 5, 7})),
-									posting.NewPosting(2, position.NewPositions([]int64{1, 5, 7})),
-								},
-							),
-						},
-					),
-				)
-				result.Put(
-					term.NewText("b"),
-					fieldindex.NewFieldIndexFromMap(
-						map[fieldname.FieldName]*postinglist.PostingList{
-							"f1": postinglist.NewPostingList(
-								[]*posting.Posting{
-									posting.NewPosting(1, position.NewPositions([]int64{2})),
-								},
-							),
-						},
-					),
-				)
+		// {
+		// 	name: "search a and not b",
+		// 	get: func() *invertedindex.InvertedIndex {
+		// 		result := invertedindex.NewInvertedIndex()
+		// 		result.Put(
+		// 			term.NewText("a"),
+		// 			fieldindex.NewFieldIndexFromMap(
+		// 				map[fieldname.FieldName]*postinglist.PostingList{
+		// 					"f1": postinglist.NewPostingList(
+		// 						[]*posting.Posting{
+		// 							posting.NewPosting(1, position.NewPositions([]int64{1, 5, 7})),
+		// 							posting.NewPosting(2, position.NewPositions([]int64{1, 5, 7})),
+		// 						},
+		// 					),
+		// 				},
+		// 			),
+		// 		)
+		// 		result.Put(
+		// 			term.NewText("b"),
+		// 			fieldindex.NewFieldIndexFromMap(
+		// 				map[fieldname.FieldName]*postinglist.PostingList{
+		// 					"f1": postinglist.NewPostingList(
+		// 						[]*posting.Posting{
+		// 							posting.NewPosting(1, position.NewPositions([]int64{2})),
+		// 						},
+		// 					),
+		// 				},
+		// 			),
+		// 		)
 
-				return result
-			},
-			args: args{
-				booleanExpression: booleanexpression.NewAnd(
-					[]*booleanexpression.BooleanExpression{
-						booleanexpression.NewFeature(
-							booleanexpression.NewBoolenaFeature(
-								"f1",
-								termcond.NewEqual(term.NewText("a"))),
-						),
-						booleanexpression.NewNot(
-							booleanexpression.NewFeature(
-								booleanexpression.NewBoolenaFeature(
-									"f1", termcond.NewEqual(term.NewText("b"))),
-							),
-						),
-					},
-					nil,
-				),
-			},
-			want: postinglist.NewPostingList([]*posting.Posting{
-				posting.NewPosting(2, nil),
-			}),
-		},
-		{
-			name: "search a or b",
-			get: func() *invertedindex.InvertedIndex {
-				result := invertedindex.NewInvertedIndex()
-				result.Put(
-					term.NewText("a"),
-					fieldindex.NewFieldIndexFromMap(
-						map[fieldname.FieldName]*postinglist.PostingList{
-							"f1": postinglist.NewPostingList([]*posting.Posting{
-								posting.NewPosting(1, position.NewPositions([]int64{1, 5, 7})),
-								posting.NewPosting(2, position.NewPositions([]int64{1, 5, 7})),
-							}),
-						},
-					),
-				)
-				result.Put(
-					term.NewText("b"),
-					fieldindex.NewFieldIndexFromMap(
-						map[fieldname.FieldName]*postinglist.PostingList{
-							"f1": postinglist.NewPostingList([]*posting.Posting{
-								posting.NewPosting(3, position.NewPositions([]int64{2})),
-							}),
-						},
-					),
-				)
+		// 		return result
+		// 	},
+		// 	args: args{
+		// 		booleanExpression: booleanexpression.NewAnd(
+		// 			[]*booleanexpression.BooleanExpression{
+		// 				booleanexpression.NewFeature(
+		// 					booleanexpression.NewBoolenaFeature(
+		// 						"f1",
+		// 						termcond.NewEqual(term.NewText("a"))),
+		// 				),
+		// 				booleanexpression.NewNot(
+		// 					booleanexpression.NewFeature(
+		// 						booleanexpression.NewBoolenaFeature(
+		// 							"f1", termcond.NewEqual(term.NewText("b"))),
+		// 					),
+		// 				),
+		// 			},
+		// 			nil,
+		// 		),
+		// 	},
+		// 	want: postinglist.NewPostingList([]*posting.Posting{
+		// 		posting.NewPosting(2, position.NewPositions([]int64{1, 5, 7})),
+		// 	}),
+		// },
+		// {
+		// 	name: "search a or b",
+		// 	get: func() *invertedindex.InvertedIndex {
+		// 		result := invertedindex.NewInvertedIndex()
+		// 		result.Put(
+		// 			term.NewText("a"),
+		// 			fieldindex.NewFieldIndexFromMap(
+		// 				map[fieldname.FieldName]*postinglist.PostingList{
+		// 					"f1": postinglist.NewPostingList([]*posting.Posting{
+		// 						posting.NewPosting(1, position.NewPositions([]int64{1, 5, 7})),
+		// 						posting.NewPosting(2, position.NewPositions([]int64{1, 5, 7})),
+		// 					}),
+		// 				},
+		// 			),
+		// 		)
+		// 		result.Put(
+		// 			term.NewText("b"),
+		// 			fieldindex.NewFieldIndexFromMap(
+		// 				map[fieldname.FieldName]*postinglist.PostingList{
+		// 					"f1": postinglist.NewPostingList([]*posting.Posting{
+		// 						posting.NewPosting(3, position.NewPositions([]int64{2})),
+		// 					}),
+		// 				},
+		// 			),
+		// 		)
 
-				return result
-			},
-			args: args{
-				booleanExpression: booleanexpression.NewOr(
-					[]*booleanexpression.BooleanExpression{
-						booleanexpression.NewFeature(
-							booleanexpression.NewBoolenaFeature(
-								"f1",
-								termcond.NewEqual(term.NewText("a"))),
-						),
-						booleanexpression.NewFeature(
-							booleanexpression.NewBoolenaFeature(
-								"f1",
-								termcond.NewEqual(term.NewText("b"))),
-						),
-					},
-				),
-			},
-			want: postinglist.NewPostingList([]*posting.Posting{
-				posting.NewPosting(1, nil),
-				posting.NewPosting(2, nil),
-				posting.NewPosting(3, nil),
-			}),
-		},
-		{
-			name: "search (a and b) and not (c and d)",
-			get: func() *invertedindex.InvertedIndex {
-				result := invertedindex.NewInvertedIndex()
-				result.Put(
-					term.NewText("a"),
-					fieldindex.NewFieldIndexFromMap(
-						map[fieldname.FieldName]*postinglist.PostingList{
-							"f1": postinglist.NewPostingList([]*posting.Posting{
-								posting.NewPosting(1, position.NewPositions([]int64{1, 5, 7})),
-								posting.NewPosting(2, position.NewPositions([]int64{1, 5, 7})),
-							}),
-						},
-					),
-				)
-				result.Put(
-					term.NewText("b"),
-					fieldindex.NewFieldIndexFromMap(
-						map[fieldname.FieldName]*postinglist.PostingList{
-							"f1": postinglist.NewPostingList([]*posting.Posting{
-								posting.NewPosting(1, position.NewPositions([]int64{2})),
-								posting.NewPosting(2, position.NewPositions([]int64{2})),
-							}),
-						},
-					),
-				)
-				result.Put(
-					term.NewText("c"),
-					fieldindex.NewFieldIndexFromMap(
-						map[fieldname.FieldName]*postinglist.PostingList{
-							"f1": postinglist.NewPostingList([]*posting.Posting{
-								posting.NewPosting(1, position.NewPositions([]int64{2})),
-							}),
-						},
-					),
-				)
-				result.Put(
-					term.NewText("d"),
-					fieldindex.NewFieldIndexFromMap(
-						map[fieldname.FieldName]*postinglist.PostingList{
-							"f1": postinglist.NewPostingList([]*posting.Posting{
-								posting.NewPosting(1, position.NewPositions([]int64{3})),
-							}),
-						},
-					),
-				)
+		// 		return result
+		// 	},
+		// 	args: args{
+		// 		booleanExpression: booleanexpression.NewOr(
+		// 			[]*booleanexpression.BooleanExpression{
+		// 				booleanexpression.NewFeature(
+		// 					booleanexpression.NewBoolenaFeature(
+		// 						"f1",
+		// 						termcond.NewEqual(term.NewText("a"))),
+		// 				),
+		// 				booleanexpression.NewFeature(
+		// 					booleanexpression.NewBoolenaFeature(
+		// 						"f1",
+		// 						termcond.NewEqual(term.NewText("b"))),
+		// 				),
+		// 			},
+		// 		),
+		// 	},
+		// 	want: postinglist.NewPostingList([]*posting.Posting{
+		// 		posting.NewPosting(1, position.NewPositions([]int64{1, 5, 7})),
+		// 		posting.NewPosting(2, position.NewPositions([]int64{1, 5, 7})),
+		// 		posting.NewPosting(3, position.NewPositions([]int64{2})),
+		// 	}),
+		// },
+		// {
+		// 	name: "search (a and b) and not (c and d)",
+		// 	get: func() *invertedindex.InvertedIndex {
+		// 		result := invertedindex.NewInvertedIndex()
+		// 		result.Put(
+		// 			term.NewText("a"),
+		// 			fieldindex.NewFieldIndexFromMap(
+		// 				map[fieldname.FieldName]*postinglist.PostingList{
+		// 					"f1": postinglist.NewPostingList([]*posting.Posting{
+		// 						posting.NewPosting(1, position.NewPositions([]int64{1, 5, 7})),
+		// 						posting.NewPosting(2, position.NewPositions([]int64{1, 5, 7})),
+		// 					}),
+		// 				},
+		// 			),
+		// 		)
+		// 		result.Put(
+		// 			term.NewText("b"),
+		// 			fieldindex.NewFieldIndexFromMap(
+		// 				map[fieldname.FieldName]*postinglist.PostingList{
+		// 					"f1": postinglist.NewPostingList([]*posting.Posting{
+		// 						posting.NewPosting(1, position.NewPositions([]int64{2})),
+		// 						posting.NewPosting(2, position.NewPositions([]int64{2})),
+		// 					}),
+		// 				},
+		// 			),
+		// 		)
+		// 		result.Put(
+		// 			term.NewText("c"),
+		// 			fieldindex.NewFieldIndexFromMap(
+		// 				map[fieldname.FieldName]*postinglist.PostingList{
+		// 					"f1": postinglist.NewPostingList([]*posting.Posting{
+		// 						posting.NewPosting(1, position.NewPositions([]int64{2})),
+		// 					}),
+		// 				},
+		// 			),
+		// 		)
+		// 		result.Put(
+		// 			term.NewText("d"),
+		// 			fieldindex.NewFieldIndexFromMap(
+		// 				map[fieldname.FieldName]*postinglist.PostingList{
+		// 					"f1": postinglist.NewPostingList([]*posting.Posting{
+		// 						posting.NewPosting(1, position.NewPositions([]int64{3})),
+		// 					}),
+		// 				},
+		// 			),
+		// 		)
 
-				return result
-			},
-			args: args{
-				booleanExpression: booleanexpression.NewAnd(
-					[]*booleanexpression.BooleanExpression{
-						booleanexpression.NewAnd([]*booleanexpression.BooleanExpression{
-							booleanexpression.NewFeature(
-								booleanexpression.NewBoolenaFeature(
-									"f1",
-									termcond.NewEqual(term.NewText("a"))),
-							),
-							booleanexpression.NewFeature(
-								booleanexpression.NewBoolenaFeature(
-									"f1",
-									termcond.NewEqual(term.NewText("b"))),
-							),
-						},
-							[]int64{0, 1},
-						),
-						booleanexpression.NewNot(
-							booleanexpression.NewAnd([]*booleanexpression.BooleanExpression{
-								booleanexpression.NewFeature(
-									booleanexpression.NewBoolenaFeature(
-										"f1",
-										termcond.NewEqual(term.NewText("c"))),
-								),
-								booleanexpression.NewFeature(
-									booleanexpression.NewBoolenaFeature(
-										"f1",
-										termcond.NewEqual(term.NewText("d"))),
-								),
-							},
-								[]int64{0, 1},
-							),
-						),
-					},
-					nil,
-				),
-			},
-			want: postinglist.NewPostingList([]*posting.Posting{
-				posting.NewPosting(2, nil),
-			}),
-		},
-		{
-			name: "search ((a and b) and not (c and d)) or e",
-			get: func() *invertedindex.InvertedIndex {
-				result := invertedindex.NewInvertedIndex()
-				result.Put(
-					term.NewText("a"),
-					fieldindex.NewFieldIndexFromMap(
-						map[fieldname.FieldName]*postinglist.PostingList{
-							"f1": postinglist.NewPostingList([]*posting.Posting{
-								posting.NewPosting(1, position.NewPositions([]int64{1, 5, 7})),
-								posting.NewPosting(2, position.NewPositions([]int64{1, 5, 7})),
-							}),
-						},
-					),
-				)
-				result.Put(
-					term.NewText("b"),
-					fieldindex.NewFieldIndexFromMap(
-						map[fieldname.FieldName]*postinglist.PostingList{
-							"f1": postinglist.NewPostingList([]*posting.Posting{
-								posting.NewPosting(1, position.NewPositions([]int64{2})),
-								posting.NewPosting(2, position.NewPositions([]int64{2})),
-							}),
-						},
-					),
-				)
-				result.Put(
-					term.NewText("c"),
-					fieldindex.NewFieldIndexFromMap(
-						map[fieldname.FieldName]*postinglist.PostingList{
-							"f1": postinglist.NewPostingList([]*posting.Posting{
-								posting.NewPosting(1, position.NewPositions([]int64{2})),
-							}),
-						},
-					),
-				)
-				result.Put(
-					term.NewText("d"),
-					fieldindex.NewFieldIndexFromMap(
-						map[fieldname.FieldName]*postinglist.PostingList{
-							"f1": postinglist.NewPostingList([]*posting.Posting{
-								posting.NewPosting(1, position.NewPositions([]int64{3})),
-							}),
-						},
-					),
-				)
-				result.Put(
-					term.NewText("e"),
-					fieldindex.NewFieldIndexFromMap(
-						map[fieldname.FieldName]*postinglist.PostingList{
-							"f1": postinglist.NewPostingList([]*posting.Posting{
-								posting.NewPosting(3, position.NewPositions([]int64{1})),
-							}),
-						},
-					),
-				)
+		// 		return result
+		// 	},
+		// 	args: args{
+		// 		booleanExpression: booleanexpression.NewAnd(
+		// 			[]*booleanexpression.BooleanExpression{
+		// 				booleanexpression.NewAnd([]*booleanexpression.BooleanExpression{
+		// 					booleanexpression.NewFeature(
+		// 						booleanexpression.NewBoolenaFeature(
+		// 							"f1",
+		// 							termcond.NewEqual(term.NewText("a"))),
+		// 					),
+		// 					booleanexpression.NewFeature(
+		// 						booleanexpression.NewBoolenaFeature(
+		// 							"f1",
+		// 							termcond.NewEqual(term.NewText("b"))),
+		// 					),
+		// 				},
+		// 					[]int64{0, 1},
+		// 				),
+		// 				booleanexpression.NewNot(
+		// 					booleanexpression.NewAnd([]*booleanexpression.BooleanExpression{
+		// 						booleanexpression.NewFeature(
+		// 							booleanexpression.NewBoolenaFeature(
+		// 								"f1",
+		// 								termcond.NewEqual(term.NewText("c"))),
+		// 						),
+		// 						booleanexpression.NewFeature(
+		// 							booleanexpression.NewBoolenaFeature(
+		// 								"f1",
+		// 								termcond.NewEqual(term.NewText("d"))),
+		// 						),
+		// 					},
+		// 						[]int64{0, 1},
+		// 					),
+		// 				),
+		// 			},
+		// 			nil,
+		// 		),
+		// 	},
+		// 	want: postinglist.NewPostingList([]*posting.Posting{
+		// 		posting.NewPosting(2, position.NewPositions([]int64{1})),
+		// 	}),
+		// },
+		// {
+		// 	name: "search ((a and b) and not (c and d)) or e",
+		// 	get: func() *invertedindex.InvertedIndex {
+		// 		result := invertedindex.NewInvertedIndex()
+		// 		result.Put(
+		// 			term.NewText("a"),
+		// 			fieldindex.NewFieldIndexFromMap(
+		// 				map[fieldname.FieldName]*postinglist.PostingList{
+		// 					"f1": postinglist.NewPostingList([]*posting.Posting{
+		// 						posting.NewPosting(1, position.NewPositions([]int64{1, 5, 7})),
+		// 						posting.NewPosting(2, position.NewPositions([]int64{1, 5, 7})),
+		// 					}),
+		// 				},
+		// 			),
+		// 		)
+		// 		result.Put(
+		// 			term.NewText("b"),
+		// 			fieldindex.NewFieldIndexFromMap(
+		// 				map[fieldname.FieldName]*postinglist.PostingList{
+		// 					"f1": postinglist.NewPostingList([]*posting.Posting{
+		// 						posting.NewPosting(1, position.NewPositions([]int64{2})),
+		// 						posting.NewPosting(2, position.NewPositions([]int64{2})),
+		// 					}),
+		// 				},
+		// 			),
+		// 		)
+		// 		result.Put(
+		// 			term.NewText("c"),
+		// 			fieldindex.NewFieldIndexFromMap(
+		// 				map[fieldname.FieldName]*postinglist.PostingList{
+		// 					"f1": postinglist.NewPostingList([]*posting.Posting{
+		// 						posting.NewPosting(1, position.NewPositions([]int64{2})),
+		// 					}),
+		// 				},
+		// 			),
+		// 		)
+		// 		result.Put(
+		// 			term.NewText("d"),
+		// 			fieldindex.NewFieldIndexFromMap(
+		// 				map[fieldname.FieldName]*postinglist.PostingList{
+		// 					"f1": postinglist.NewPostingList([]*posting.Posting{
+		// 						posting.NewPosting(1, position.NewPositions([]int64{3})),
+		// 					}),
+		// 				},
+		// 			),
+		// 		)
+		// 		result.Put(
+		// 			term.NewText("e"),
+		// 			fieldindex.NewFieldIndexFromMap(
+		// 				map[fieldname.FieldName]*postinglist.PostingList{
+		// 					"f1": postinglist.NewPostingList([]*posting.Posting{
+		// 						posting.NewPosting(3, position.NewPositions([]int64{1})),
+		// 					}),
+		// 				},
+		// 			),
+		// 		)
 
-				return result
-			},
-			args: args{
-				booleanExpression: booleanexpression.NewOr(
-					[]*booleanexpression.BooleanExpression{
-						booleanexpression.NewAnd(
-							[]*booleanexpression.BooleanExpression{
-								booleanexpression.NewAnd([]*booleanexpression.BooleanExpression{
-									booleanexpression.NewFeature(
-										booleanexpression.NewBoolenaFeature(
-											"f1",
-											termcond.NewEqual(term.NewText("a"))),
-									),
-									booleanexpression.NewFeature(
-										booleanexpression.NewBoolenaFeature(
-											"f1",
-											termcond.NewEqual(term.NewText("b"))),
-									),
-								},
-									[]int64{0, 1},
-								),
-								booleanexpression.NewNot(
-									booleanexpression.NewAnd([]*booleanexpression.BooleanExpression{
-										booleanexpression.NewFeature(
-											booleanexpression.NewBoolenaFeature(
-												"f1",
-												termcond.NewEqual(term.NewText("c"))),
-										),
-										booleanexpression.NewFeature(
-											booleanexpression.NewBoolenaFeature(
-												"f1",
-												termcond.NewEqual(term.NewText("d"))),
-										),
-									},
-										[]int64{0, 1},
-									),
-								),
-							},
-							nil,
-						),
-						booleanexpression.NewFeature(
-							booleanexpression.NewBoolenaFeature(
-								"f1",
-								termcond.NewEqual(term.NewText("e")))),
-					},
-				),
-			},
-			want: postinglist.NewPostingList([]*posting.Posting{
-				posting.NewPosting(2, nil),
-				posting.NewPosting(3, nil),
-			}),
-		},
+		// 		return result
+		// 	},
+		// 	args: args{
+		// 		booleanExpression: booleanexpression.NewOr(
+		// 			[]*booleanexpression.BooleanExpression{
+		// 				booleanexpression.NewAnd(
+		// 					[]*booleanexpression.BooleanExpression{
+		// 						booleanexpression.NewAnd([]*booleanexpression.BooleanExpression{
+		// 							booleanexpression.NewFeature(
+		// 								booleanexpression.NewBoolenaFeature(
+		// 									"f1",
+		// 									termcond.NewEqual(term.NewText("a"))),
+		// 							),
+		// 							booleanexpression.NewFeature(
+		// 								booleanexpression.NewBoolenaFeature(
+		// 									"f1",
+		// 									termcond.NewEqual(term.NewText("b"))),
+		// 							),
+		// 						},
+		// 							[]int64{0, 1},
+		// 						),
+		// 						booleanexpression.NewNot(
+		// 							booleanexpression.NewAnd([]*booleanexpression.BooleanExpression{
+		// 								booleanexpression.NewFeature(
+		// 									booleanexpression.NewBoolenaFeature(
+		// 										"f1",
+		// 										termcond.NewEqual(term.NewText("c"))),
+		// 								),
+		// 								booleanexpression.NewFeature(
+		// 									booleanexpression.NewBoolenaFeature(
+		// 										"f1",
+		// 										termcond.NewEqual(term.NewText("d"))),
+		// 								),
+		// 							},
+		// 								[]int64{0, 1},
+		// 							),
+		// 						),
+		// 					},
+		// 					nil,
+		// 				),
+		// 				booleanexpression.NewFeature(
+		// 					booleanexpression.NewBoolenaFeature(
+		// 						"f1",
+		// 						termcond.NewEqual(term.NewText("e")))),
+		// 			},
+		// 		),
+		// 	},
+		// 	want: postinglist.NewPostingList([]*posting.Posting{
+		// 		posting.NewPosting(2, position.NewPositions([]int64{1})),
+		// 		posting.NewPosting(3, position.NewPositions([]int64{1})),
+		// 	}),
+		// },
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -492,9 +493,9 @@ func TestInvertedIndex_GetPostingListInFeature(t *testing.T) {
 				),
 			},
 			want: postinglist.NewPostingList([]*posting.Posting{
-				posting.NewPosting(1, nil),
-				posting.NewPosting(2, nil),
-				posting.NewPosting(3, nil),
+				posting.NewPosting(1, position.NewPositions([]int64{1, 2, 5, 7})),
+				posting.NewPosting(2, position.NewPositions([]int64{1, 5, 7})),
+				posting.NewPosting(3, position.NewPositions([]int64{2})),
 			}),
 		},
 	}

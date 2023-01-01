@@ -14,6 +14,14 @@ func (p Positions) Len() int {
 	return len(p.value)
 }
 
+func (p Positions) Copy() *Positions {
+	v := make([]int64, len(p.value))
+	copy(v, p.value)
+	return &Positions{
+		value: v,
+	}
+}
+
 func (p Positions) At(i int) int64 {
 	return p.value[i]
 }

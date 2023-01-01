@@ -5,16 +5,18 @@ type PositionsCursor struct {
 	cur int
 }
 
-func (p *PositionsCursor) Skip(value int64) {
+func (p *PositionsCursor) Skip(value int64) bool {
 	p.cur += exponentialSearch(p.value[p.cur:], value)
+	return p.cur < p.Len()
 }
 
-func (p PositionsCursor) Current() int64 {
+func (p *PositionsCursor) Next() bool {
+	p.cur++
+	return p.cur < p.Len()
+}
+
+func (p PositionsCursor) Value() int64 {
 	return p.value[p.cur]
-}
-
-func (p PositionsCursor) Valid() bool {
-	return p.cur < len(p.value)
 }
 
 func exponentialSearch(arr []int64, docID int64) int {
