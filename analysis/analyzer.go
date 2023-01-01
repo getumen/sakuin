@@ -1,25 +1,23 @@
-package analyzer
+package analysis
 
-import "github.com/getumen/sakuin/term"
+import (
+	"github.com/getumen/sakuin/analysis/token"
+)
 
 type CharFilter interface {
 	Filter(string) string
 }
 
 type Tokenizer interface {
-	Tokenize(string) TokenStream
+	Tokenize(string) token.TokenStream
 }
 
 type TokenFilter interface {
-	Filter(TokenStream) TokenStream
+	Filter(token.TokenStream) token.TokenStream
 }
 
 type Analyzer struct {
 	charFilters  []CharFilter
 	tokenizer    Tokenizer
 	tokenFilters []TokenFilter
-}
-
-type TokenStream struct {
-	terms []term.Term
 }
