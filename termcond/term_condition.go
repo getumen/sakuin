@@ -38,6 +38,10 @@ func (c TermCondition) IncludeEnd() bool {
 	return c.includeEnd
 }
 
+func (c TermCondition) IsEqual() bool {
+	return term.Comparator(c.start, c.end) == 0 && c.includeStart && c.includeEnd
+}
+
 func NewRange(
 	start term.Term,
 	includeStart bool,

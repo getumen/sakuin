@@ -34,7 +34,7 @@ func BenchmarkSearchFloat(b *testing.B) {
 	documents := make([]*document.Document, len(arr))
 	for i, f := range arr {
 		documents[i] = document.NewDocument(
-			int64(i+1),
+			uint64(i+1),
 			[]*document.Field{
 				document.NewField(
 					"value",

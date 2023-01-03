@@ -1,0 +1,9 @@
+syntax = "proto3";
+
+package log.v1;
+
+option go_package = "github.com/getumen/sakuin/fieldindex";
+
+message Record {
+    map<string, bytes> fieldIndex = 1;
+}

@@ -1,12 +1,12 @@
 package document
 
 type Document struct {
-	id     int64
+	id     uint64
 	fields []*Field
 }
 
 func NewDocument(
-	id int64,
+	id uint64,
 	fields []*Field,
 ) *Document {
 	return &Document{
@@ -15,7 +15,7 @@ func NewDocument(
 	}
 }
 
-func (d Document) ID() int64 {
+func (d Document) ID() uint64 {
 	return d.id
 }
 

@@ -7,7 +7,6 @@ import (
 	"github.com/getumen/sakuin/document"
 	"github.com/getumen/sakuin/fieldindex"
 	"github.com/getumen/sakuin/invertedindex"
-	"github.com/getumen/sakuin/position"
 	"github.com/getumen/sakuin/posting"
 	"github.com/getumen/sakuin/postinglist"
 	"github.com/getumen/sakuin/storage"
@@ -61,7 +60,7 @@ func (s *IndexWriter) indexDocument(
 	indexChunk := invertedindex.NewInvertedIndex()
 
 	for _, field := range doc.Fields() {
-		var pos int64
+		var pos uint32
 		for _, term := range field.Content() {
 			var fieldIndex fieldindex.FieldIndex
 
@@ -72,7 +71,7 @@ func (s *IndexWriter) indexDocument(
 			}
 
 			newPostingList := postinglist.NewPostingList([]*posting.Posting{
-				posting.NewPosting(doc.ID(), position.NewPositions([]int64{pos})),
+				posting.NewPosting(doc.ID(), []uint32{pos}),
 			})
 			pos += 1
 

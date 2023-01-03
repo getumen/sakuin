@@ -7,7 +7,6 @@ import (
 	"github.com/getumen/sakuin/fieldindex"
 	"github.com/getumen/sakuin/fieldname"
 	"github.com/getumen/sakuin/invertedindex"
-	"github.com/getumen/sakuin/position"
 	"github.com/getumen/sakuin/posting"
 	"github.com/getumen/sakuin/postinglist"
 	"github.com/getumen/sakuin/term"
@@ -35,8 +34,8 @@ func TestInvertedIndex_Search(t *testing.T) {
 						map[fieldname.FieldName]*postinglist.PostingList{
 							"f1": postinglist.NewPostingList(
 								[]*posting.Posting{
-									posting.NewPosting(1, position.NewPositions([]int64{1, 5, 7})),
-									posting.NewPosting(2, position.NewPositions([]int64{3, 5, 7})),
+									posting.NewPosting(1, []uint32{1, 5, 7}),
+									posting.NewPosting(2, []uint32{3, 5, 7}),
 								},
 							),
 						},
@@ -48,8 +47,8 @@ func TestInvertedIndex_Search(t *testing.T) {
 						map[fieldname.FieldName]*postinglist.PostingList{
 							"f1": postinglist.NewPostingList(
 								[]*posting.Posting{
-									posting.NewPosting(1, position.NewPositions([]int64{2})),
-									posting.NewPosting(2, position.NewPositions([]int64{2})),
+									posting.NewPosting(1, []uint32{2}),
+									posting.NewPosting(2, []uint32{2}),
 								},
 							),
 						},
@@ -72,11 +71,11 @@ func TestInvertedIndex_Search(t *testing.T) {
 								termcond.NewEqual(term.NewText("b"))),
 						),
 					},
-					[]int64{0, 1},
+					[]uint32{0, 1},
 				),
 			},
 			want: postinglist.NewPostingList([]*posting.Posting{
-				posting.NewPosting(1, position.NewPositions([]int64{1})),
+				posting.NewPosting(1, []uint32{1}),
 			}),
 		},
 		{
@@ -89,8 +88,8 @@ func TestInvertedIndex_Search(t *testing.T) {
 						map[fieldname.FieldName]*postinglist.PostingList{
 							"f1": postinglist.NewPostingList(
 								[]*posting.Posting{
-									posting.NewPosting(1, position.NewPositions([]int64{1, 5, 7})),
-									posting.NewPosting(2, position.NewPositions([]int64{1, 5, 7})),
+									posting.NewPosting(1, []uint32{1, 5, 7}),
+									posting.NewPosting(2, []uint32{3, 5, 7}),
 								},
 							),
 						},
@@ -102,7 +101,7 @@ func TestInvertedIndex_Search(t *testing.T) {
 						map[fieldname.FieldName]*postinglist.PostingList{
 							"f1": postinglist.NewPostingList(
 								[]*posting.Posting{
-									posting.NewPosting(1, position.NewPositions([]int64{2})),
+									posting.NewPosting(1, []uint32{2}),
 								},
 							),
 						},
@@ -129,7 +128,7 @@ func TestInvertedIndex_Search(t *testing.T) {
 				),
 			},
 			want: postinglist.NewPostingList([]*posting.Posting{
-				posting.NewPosting(2, position.NewPositions([]int64{1, 5, 7})),
+				posting.NewPosting(2, []uint32{3, 5, 7}),
 			}),
 		},
 		{
@@ -141,8 +140,8 @@ func TestInvertedIndex_Search(t *testing.T) {
 					fieldindex.NewFieldIndexFromMap(
 						map[fieldname.FieldName]*postinglist.PostingList{
 							"f1": postinglist.NewPostingList([]*posting.Posting{
-								posting.NewPosting(1, position.NewPositions([]int64{1, 5, 7})),
-								posting.NewPosting(2, position.NewPositions([]int64{1, 5, 7})),
+								posting.NewPosting(1, []uint32{1, 5, 7}),
+								posting.NewPosting(2, []uint32{3, 5, 7}),
 							}),
 						},
 					),
@@ -152,7 +151,7 @@ func TestInvertedIndex_Search(t *testing.T) {
 					fieldindex.NewFieldIndexFromMap(
 						map[fieldname.FieldName]*postinglist.PostingList{
 							"f1": postinglist.NewPostingList([]*posting.Posting{
-								posting.NewPosting(3, position.NewPositions([]int64{2})),
+								posting.NewPosting(3, []uint32{2}),
 							}),
 						},
 					),
@@ -177,9 +176,9 @@ func TestInvertedIndex_Search(t *testing.T) {
 				),
 			},
 			want: postinglist.NewPostingList([]*posting.Posting{
-				posting.NewPosting(1, position.NewPositions([]int64{1, 5, 7})),
-				posting.NewPosting(2, position.NewPositions([]int64{1, 5, 7})),
-				posting.NewPosting(3, position.NewPositions([]int64{2})),
+				posting.NewPosting(1, []uint32{1, 5, 7}),
+				posting.NewPosting(2, []uint32{3, 5, 7}),
+				posting.NewPosting(3, []uint32{2}),
 			}),
 		},
 		{
@@ -191,8 +190,8 @@ func TestInvertedIndex_Search(t *testing.T) {
 					fieldindex.NewFieldIndexFromMap(
 						map[fieldname.FieldName]*postinglist.PostingList{
 							"f1": postinglist.NewPostingList([]*posting.Posting{
-								posting.NewPosting(1, position.NewPositions([]int64{1, 5, 7})),
-								posting.NewPosting(2, position.NewPositions([]int64{1, 5, 7})),
+								posting.NewPosting(1, []uint32{1, 5, 7}),
+								posting.NewPosting(2, []uint32{1, 5, 7}),
 							}),
 						},
 					),
@@ -202,8 +201,8 @@ func TestInvertedIndex_Search(t *testing.T) {
 					fieldindex.NewFieldIndexFromMap(
 						map[fieldname.FieldName]*postinglist.PostingList{
 							"f1": postinglist.NewPostingList([]*posting.Posting{
-								posting.NewPosting(1, position.NewPositions([]int64{2})),
-								posting.NewPosting(2, position.NewPositions([]int64{2})),
+								posting.NewPosting(1, []uint32{2}),
+								posting.NewPosting(2, []uint32{2}),
 							}),
 						},
 					),
@@ -213,7 +212,7 @@ func TestInvertedIndex_Search(t *testing.T) {
 					fieldindex.NewFieldIndexFromMap(
 						map[fieldname.FieldName]*postinglist.PostingList{
 							"f1": postinglist.NewPostingList([]*posting.Posting{
-								posting.NewPosting(1, position.NewPositions([]int64{2})),
+								posting.NewPosting(1, []uint32{2}),
 							}),
 						},
 					),
@@ -223,7 +222,7 @@ func TestInvertedIndex_Search(t *testing.T) {
 					fieldindex.NewFieldIndexFromMap(
 						map[fieldname.FieldName]*postinglist.PostingList{
 							"f1": postinglist.NewPostingList([]*posting.Posting{
-								posting.NewPosting(1, position.NewPositions([]int64{3})),
+								posting.NewPosting(1, []uint32{3}),
 							}),
 						},
 					),
@@ -246,7 +245,7 @@ func TestInvertedIndex_Search(t *testing.T) {
 									termcond.NewEqual(term.NewText("b"))),
 							),
 						},
-							[]int64{0, 1},
+							[]uint32{0, 1},
 						),
 						expression.NewNot(
 							expression.NewPhrase([]*expression.Expression{
@@ -261,14 +260,14 @@ func TestInvertedIndex_Search(t *testing.T) {
 										termcond.NewEqual(term.NewText("d"))),
 								),
 							},
-								[]int64{0, 1},
+								[]uint32{0, 1},
 							),
 						),
 					},
 				),
 			},
 			want: postinglist.NewPostingList([]*posting.Posting{
-				posting.NewPosting(2, position.NewPositions([]int64{1})),
+				posting.NewPosting(2, []uint32{1}),
 			}),
 		},
 		{
@@ -280,8 +279,8 @@ func TestInvertedIndex_Search(t *testing.T) {
 					fieldindex.NewFieldIndexFromMap(
 						map[fieldname.FieldName]*postinglist.PostingList{
 							"f1": postinglist.NewPostingList([]*posting.Posting{
-								posting.NewPosting(1, position.NewPositions([]int64{1, 5, 7})),
-								posting.NewPosting(2, position.NewPositions([]int64{1, 5, 7})),
+								posting.NewPosting(1, []uint32{1, 5, 7}),
+								posting.NewPosting(2, []uint32{1, 5, 7}),
 							}),
 						},
 					),
@@ -291,8 +290,8 @@ func TestInvertedIndex_Search(t *testing.T) {
 					fieldindex.NewFieldIndexFromMap(
 						map[fieldname.FieldName]*postinglist.PostingList{
 							"f1": postinglist.NewPostingList([]*posting.Posting{
-								posting.NewPosting(1, position.NewPositions([]int64{2})),
-								posting.NewPosting(2, position.NewPositions([]int64{2})),
+								posting.NewPosting(1, []uint32{2}),
+								posting.NewPosting(2, []uint32{2}),
 							}),
 						},
 					),
@@ -302,7 +301,7 @@ func TestInvertedIndex_Search(t *testing.T) {
 					fieldindex.NewFieldIndexFromMap(
 						map[fieldname.FieldName]*postinglist.PostingList{
 							"f1": postinglist.NewPostingList([]*posting.Posting{
-								posting.NewPosting(1, position.NewPositions([]int64{2})),
+								posting.NewPosting(1, []uint32{2}),
 							}),
 						},
 					),
@@ -312,7 +311,7 @@ func TestInvertedIndex_Search(t *testing.T) {
 					fieldindex.NewFieldIndexFromMap(
 						map[fieldname.FieldName]*postinglist.PostingList{
 							"f1": postinglist.NewPostingList([]*posting.Posting{
-								posting.NewPosting(1, position.NewPositions([]int64{3})),
+								posting.NewPosting(1, []uint32{3}),
 							}),
 						},
 					),
@@ -322,7 +321,7 @@ func TestInvertedIndex_Search(t *testing.T) {
 					fieldindex.NewFieldIndexFromMap(
 						map[fieldname.FieldName]*postinglist.PostingList{
 							"f1": postinglist.NewPostingList([]*posting.Posting{
-								posting.NewPosting(3, position.NewPositions([]int64{1})),
+								posting.NewPosting(3, []uint32{1}),
 							}),
 						},
 					),
@@ -347,7 +346,7 @@ func TestInvertedIndex_Search(t *testing.T) {
 											termcond.NewEqual(term.NewText("b"))),
 									),
 								},
-									[]int64{0, 1},
+									[]uint32{0, 1},
 								),
 								expression.NewNot(
 									expression.NewPhrase([]*expression.Expression{
@@ -362,7 +361,7 @@ func TestInvertedIndex_Search(t *testing.T) {
 												termcond.NewEqual(term.NewText("d"))),
 										),
 									},
-										[]int64{0, 1},
+										[]uint32{0, 1},
 									),
 								),
 							},
@@ -375,8 +374,8 @@ func TestInvertedIndex_Search(t *testing.T) {
 				),
 			},
 			want: postinglist.NewPostingList([]*posting.Posting{
-				posting.NewPosting(2, position.NewPositions([]int64{1})),
-				posting.NewPosting(3, position.NewPositions([]int64{1})),
+				posting.NewPosting(2, []uint32{1}),
+				posting.NewPosting(3, []uint32{1}),
 			}),
 		},
 	}
@@ -408,8 +407,8 @@ func TestInvertedIndex_GetPostingListInFeature(t *testing.T) {
 					fieldindex.NewFieldIndexFromMap(
 						map[fieldname.FieldName]*postinglist.PostingList{
 							"f1": postinglist.NewPostingList([]*posting.Posting{
-								posting.NewPosting(1, position.NewPositions([]int64{1, 5, 7})),
-								posting.NewPosting(2, position.NewPositions([]int64{1, 5, 7})),
+								posting.NewPosting(1, []uint32{1, 5, 7}),
+								posting.NewPosting(2, []uint32{1, 5, 7}),
 							}),
 						},
 					),
@@ -419,8 +418,8 @@ func TestInvertedIndex_GetPostingListInFeature(t *testing.T) {
 					fieldindex.NewFieldIndexFromMap(
 						map[fieldname.FieldName]*postinglist.PostingList{
 							"f1": postinglist.NewPostingList([]*posting.Posting{
-								posting.NewPosting(1, position.NewPositions([]int64{2})),
-								posting.NewPosting(2, position.NewPositions([]int64{2})),
+								posting.NewPosting(1, []uint32{2}),
+								posting.NewPosting(2, []uint32{2}),
 							}),
 						},
 					),
@@ -435,8 +434,8 @@ func TestInvertedIndex_GetPostingListInFeature(t *testing.T) {
 				),
 			},
 			want: postinglist.NewPostingList([]*posting.Posting{
-				posting.NewPosting(1, position.NewPositions([]int64{1, 5, 7})),
-				posting.NewPosting(2, position.NewPositions([]int64{1, 5, 7})),
+				posting.NewPosting(1, []uint32{1, 5, 7}),
+				posting.NewPosting(2, []uint32{1, 5, 7}),
 			}),
 		},
 		{
@@ -448,8 +447,8 @@ func TestInvertedIndex_GetPostingListInFeature(t *testing.T) {
 					fieldindex.NewFieldIndexFromMap(
 						map[fieldname.FieldName]*postinglist.PostingList{
 							"f1": postinglist.NewPostingList([]*posting.Posting{
-								posting.NewPosting(1, position.NewPositions([]int64{1, 5, 7})),
-								posting.NewPosting(2, position.NewPositions([]int64{1, 5, 7})),
+								posting.NewPosting(1, []uint32{1, 5, 7}),
+								posting.NewPosting(2, []uint32{1, 5, 7}),
 							}),
 						},
 					),
@@ -459,8 +458,8 @@ func TestInvertedIndex_GetPostingListInFeature(t *testing.T) {
 					fieldindex.NewFieldIndexFromMap(
 						map[fieldname.FieldName]*postinglist.PostingList{
 							"f1": postinglist.NewPostingList([]*posting.Posting{
-								posting.NewPosting(1, position.NewPositions([]int64{2})),
-								posting.NewPosting(3, position.NewPositions([]int64{2})),
+								posting.NewPosting(1, []uint32{2}),
+								posting.NewPosting(3, []uint32{2}),
 							}),
 						},
 					),
@@ -470,7 +469,7 @@ func TestInvertedIndex_GetPostingListInFeature(t *testing.T) {
 					fieldindex.NewFieldIndexFromMap(
 						map[fieldname.FieldName]*postinglist.PostingList{
 							"f1": postinglist.NewPostingList([]*posting.Posting{
-								posting.NewPosting(4, position.NewPositions([]int64{2})),
+								posting.NewPosting(4, []uint32{2}),
 							}),
 						},
 					),
@@ -490,9 +489,9 @@ func TestInvertedIndex_GetPostingListInFeature(t *testing.T) {
 				),
 			},
 			want: postinglist.NewPostingList([]*posting.Posting{
-				posting.NewPosting(1, position.NewPositions([]int64{1, 2, 5, 7})),
-				posting.NewPosting(2, position.NewPositions([]int64{1, 5, 7})),
-				posting.NewPosting(3, position.NewPositions([]int64{2})),
+				posting.NewPosting(1, []uint32{1, 2, 5, 7}),
+				posting.NewPosting(2, []uint32{1, 5, 7}),
+				posting.NewPosting(3, []uint32{2}),
 			}),
 		},
 	}
