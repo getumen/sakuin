@@ -95,14 +95,14 @@ func NewText(value string) Term {
 
 func NewInt64(value int64) Term {
 	b := make([]byte, 0)
-	b = append(b, byte(Text))
+	b = append(b, byte(Int64))
 	b = append(b, newInt64Bytes(value).bytes()...)
 	return b
 }
 
 func NewFloat64(value float64) Term {
 	b := make([]byte, 0)
-	b = append(b, byte(Text))
+	b = append(b, byte(Float64))
 	b = append(b, newFloat64Bytes(value).bytes()...)
 	return b
 }
