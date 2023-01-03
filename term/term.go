@@ -2,8 +2,10 @@ package term
 
 import (
 	"bytes"
+	"encoding/binary"
 	"fmt"
 	"log"
+	"math"
 )
 
 type Term []byte
@@ -17,11 +19,11 @@ func (t Term) Text() string {
 }
 
 func (t Term) Int64() int64 {
-	return newInt64BytesFromBytes(t[1:]).int64()
+	return bytesToInt64(t[1:])
 }
 
 func (t Term) Float64() float64 {
-	return newFloat64BytesFromBytes(t[1:]).float64()
+	return bytesToFloat64(t[1:])
 }
 
 func (t Term) String() string {
@@ -96,13 +98,40 @@ func NewText(value string) Term {
 func NewInt64(value int64) Term {
 	b := make([]byte, 0)
 	b = append(b, byte(Int64))
-	b = append(b, newInt64Bytes(value).bytes()...)
+	b = append(b, int64ToBytes(value)...)
 	return b
+}
+
+func int64ToBytes(value int64) []byte {
+	result := make([]byte, 8)
+	binary.BigEndian.PutUint64(result, uint64(value)^(1<<63))
+	return result
+}
+
+func bytesToInt64(bytes []byte) int64 {
+	return int64(binary.BigEndian.Uint64(bytes) ^ (1 << 63))
 }
 
 func NewFloat64(value float64) Term {
 	b := make([]byte, 0)
 	b = append(b, byte(Float64))
-	b = append(b, newFloat64Bytes(value).bytes()...)
+	b = append(b, float64ToBytes(value)...)
 	return b
+}
+
+func float64ToBytes(value float64) []byte {
+	result := make([]byte, 8)
+	binary.BigEndian.PutUint64(result, signFlip(math.Float64bits(value)))
+	return result
+}
+
+func bytesToFloat64(bytes []byte) float64 {
+	return math.Float64frombits(signFlip(binary.BigEndian.Uint64(bytes)))
+}
+
+// https://lemire.me/blog/2020/12/14/converting-floating-point-numbers-to-integers-while-preserving-order/?utm_source=pocket_saves
+func signFlip(x uint64) uint64 {
+	mask := uint64(int64(x) >> 63)
+	mask |= 0x8000000000000000
+	return (x ^ mask)
 }
