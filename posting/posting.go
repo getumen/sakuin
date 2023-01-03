@@ -96,7 +96,6 @@ func Deserialize(blob []byte) ([]*Posting, error) {
 	if err != nil {
 		return nil, fmt.Errorf("decode positions failed: %w", err)
 	}
-	cur += int(positionBlobSize)
 
 	var posIndex int
 
