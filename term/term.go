@@ -8,6 +8,10 @@ import (
 
 type Term []byte
 
+func (t Term) Raw() []byte {
+	return t
+}
+
 func (t Term) Text() string {
 	return string(t[1:])
 }

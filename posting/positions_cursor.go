@@ -1,25 +1,25 @@
-package position
+package posting
 
-type PositionsCursor struct {
-	Positions
+type positionsCursor struct {
+	positions
 	cur int
 }
 
-func (p *PositionsCursor) Skip(value int64) bool {
-	p.cur += exponentialSearch(p.value[p.cur:], value)
-	return p.cur < p.Len()
+func (p *positionsCursor) Skip(value uint32) bool {
+	p.cur += exponentialSearch(p.positions[p.cur:], value)
+	return p.cur < len(p.positions)
 }
 
-func (p *PositionsCursor) Next() bool {
+func (p *positionsCursor) Next() bool {
 	p.cur++
-	return p.cur < p.Len()
+	return p.cur < len(p.positions)
 }
 
-func (p PositionsCursor) Value() int64 {
-	return p.value[p.cur]
+func (p positionsCursor) Value() uint32 {
+	return p.positions[p.cur]
 }
 
-func exponentialSearch(arr []int64, docID int64) int {
+func exponentialSearch(arr []uint32, docID uint32) int {
 	if arr[0] == docID {
 		return 0
 	}
@@ -33,7 +33,7 @@ func exponentialSearch(arr []int64, docID int64) int {
 	)
 }
 
-func binarySearch(arr []int64, docID int64) int {
+func binarySearch(arr []uint32, docID uint32) int {
 	i, j := 0, len(arr)
 	for i < j {
 		h := int(uint(i+j) >> 1) // avoid overflow when computing h
@@ -46,11 +46,4 @@ func binarySearch(arr []int64, docID int64) int {
 	}
 	// i == j, f(i-1) == false, and f(j) (= f(i)) == true  =>  answer is i.
 	return i
-}
-
-func min(x, y int) int {
-	if x < y {
-		return x
-	}
-	return y
 }

@@ -1,15 +1,21 @@
 package posting
 
-import "github.com/getumen/sakuin/position"
+import (
+	"encoding/binary"
+	"fmt"
+
+	"github.com/getumen/sakuin/encoding/int32enc"
+	"github.com/getumen/sakuin/encoding/int64enc"
+)
 
 type Posting struct {
-	docID     int64
-	positions *position.Positions
+	docID     uint64
+	positions positions
 }
 
 func NewPosting(
-	docID int64,
-	positions *position.Positions,
+	docID uint64,
+	positions []uint32,
 ) *Posting {
 	return &Posting{
 		docID:     docID,
@@ -28,14 +34,6 @@ func (p *Posting) Max(other *Posting) *Posting {
 	return p
 }
 
-func (p Posting) GetDocID() int64 {
-	return p.docID
-}
-
-func (p Posting) GetPositions() *position.Positions {
-	return p.positions
-}
-
 func (p Posting) Copy() *Posting {
 	return &Posting{
 		docID:     p.docID,
@@ -44,26 +42,118 @@ func (p Posting) Copy() *Posting {
 }
 
 func (p *Posting) Merge(other *Posting) {
-	newPositions := make([]int64, 0)
-	var left, right int
-	for left < p.positions.Len() && right < other.positions.Len() {
-		if p.positions.At(left) < other.positions.At(right) {
-			newPositions = append(newPositions, p.positions.At(left))
-			left++
-		} else if p.positions.At(left) == other.positions.At(right) {
-			newPositions = append(newPositions, p.positions.At(left))
-			left++
-			right++
-		} else {
-			newPositions = append(newPositions, other.positions.At(right))
-			right++
+	p.positions.merge(other.positions)
+}
+
+func Serialize(postings []*Posting) ([]byte, error) {
+	result := make([]byte, 0)
+
+	docIDs := make([]uint64, len(postings))
+	for i := range postings {
+		docIDs[i] = postings[i].docID
+	}
+	int64enc.EncodeDeltaInplace(docIDs)
+
+	docIDBlob, err := int64enc.Encode(docIDs)
+	if err != nil {
+		return nil, fmt.Errorf("encode doc id error: %w", err)
+	}
+	result = binary.AppendUvarint(result, uint64(len(docIDBlob)))
+	result = append(result, docIDBlob...)
+
+	positionList := make([]uint32, 0)
+	for i := range postings {
+		ps := make([]uint32, len(postings[i].positions))
+		copy(ps, postings[i].positions)
+		int32enc.EncodeDeltaInplace(ps)
+		positionList = append(positionList, uint32(len(postings[i].positions)))
+		positionList = append(positionList, ps...)
+	}
+	positionBlob, err := int32enc.Encode(positionList)
+	if err != nil {
+		return nil, fmt.Errorf("encode position error: %w", err)
+	}
+	result = binary.AppendUvarint(result, uint64(len(positionBlob)))
+	result = append(result, positionBlob...)
+
+	return result, nil
+}
+
+func Deserialize(blob []byte) ([]*Posting, error) {
+	var cur int
+	docIDBlobSize, diff := binary.Uvarint(blob[cur:])
+	cur += diff
+	docIDs, err := int64enc.Decode(blob[cur : cur+int(docIDBlobSize)])
+	if err != nil {
+		return nil, fmt.Errorf("decode doc id failed: %w", err)
+	}
+	cur += int(docIDBlobSize)
+	int64enc.DecodeDeltaInplace(docIDs)
+
+	positionBlobSize, diff := binary.Uvarint(blob[cur:])
+	cur += diff
+	positionList, err := int32enc.Decode(blob[cur : cur+int(positionBlobSize)])
+	if err != nil {
+		return nil, fmt.Errorf("decode positions failed: %w", err)
+	}
+	cur += int(positionBlobSize)
+
+	var posIndex int
+
+	result := make([]*Posting, len(docIDs))
+	for i, docID := range docIDs {
+		n := positionList[posIndex]
+		posIndex++
+		ps := make([]uint32, n)
+		for p := 0; p < int(n); p++ {
+			ps[p] = positionList[posIndex]
+			posIndex++
+		}
+		int32enc.DecodeDeltaInplace(ps)
+
+		result[i] = NewPosting(docID, ps)
+	}
+
+	return result, nil
+}
+
+func PhraseMatch(postingLists []*Posting, relativePosition []uint32) *Posting {
+	// positionがマッチするかを探索
+	positionCursors := make([]*positionsCursor, len(postingLists))
+	for i, v := range postingLists {
+		if len(v.positions) == 0 {
+			return nil
+		}
+		positionCursors[i] = v.positions.Cursor()
+	}
+
+	matchPositions := make([]uint32, 0)
+
+POSITION_LOOP:
+	for {
+		positionMatchCount := 1
+		currentOffset := positionCursors[0].Value()
+		for index := 1; index < len(positionCursors); index++ {
+			absolutePosition := currentOffset + relativePosition[index]
+			for positionCursors[index].Value() < absolutePosition {
+				if !positionCursors[index].Skip(absolutePosition) {
+					break POSITION_LOOP
+				}
+			}
+			if positionCursors[index].Value() == absolutePosition {
+				positionMatchCount++
+			}
+		}
+
+		if positionMatchCount == len(positionCursors) {
+			matchPositions = append(matchPositions, positionCursors[0].Value())
+		}
+		if !positionCursors[0].Next() {
+			break POSITION_LOOP
 		}
 	}
-	for ; left < p.positions.Len(); left++ {
-		newPositions = append(newPositions, p.positions.At(left))
+	if len(matchPositions) > 0 {
+		return NewPosting(postingLists[0].docID, matchPositions)
 	}
-	for ; right < other.positions.Len(); right++ {
-		newPositions = append(newPositions, other.positions.At(right))
-	}
-	p.positions = position.NewPositions(newPositions)
+	return nil
 }

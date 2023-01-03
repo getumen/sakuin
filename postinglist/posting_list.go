@@ -2,8 +2,8 @@ package postinglist
 
 import (
 	"container/heap"
+	"fmt"
 
-	"github.com/getumen/sakuin/position"
 	"github.com/getumen/sakuin/posting"
 )
 
@@ -17,6 +17,20 @@ func NewPostingList(
 	return &PostingList{
 		postingList: pl,
 	}
+}
+
+func (p PostingList) Serialize() ([]byte, error) {
+	return posting.Serialize(p.postingList)
+}
+
+func Deserialize(blob []byte) (*PostingList, error) {
+	pl, err := posting.Deserialize(blob)
+	if err != nil {
+		return nil, fmt.Errorf("deserialize error: %w", err)
+	}
+	return &PostingList{
+		postingList: pl,
+	}, nil
 }
 
 func (p *PostingList) Merge(other *PostingList) {
@@ -45,10 +59,6 @@ func (p *PostingList) Merge(other *PostingList) {
 	p.postingList = newPostings
 }
 
-func (p PostingList) GetPostingList() []*posting.Posting {
-	return p.postingList
-}
-
 func (p PostingList) Cursor() *PostingListCursor {
 	return NewPostingListCursor(p)
 }
@@ -57,92 +67,33 @@ func (p PostingList) Len() int {
 	return len(p.postingList)
 }
 
-func PhraseMatch(postingLists []*PostingList, relativePosition []int64) *PostingList {
+func PhraseMatch(postingLists []*PostingList, relativePosition []uint32) *PostingList {
 	if len(postingLists) == 0 {
 		return NewPostingList(make([]*posting.Posting, 0))
 	}
 
 	postingListCursors := make([]*PostingListCursor, len(postingLists))
-	maxPosting := posting.NewPosting(0, nil)
 
 	for i := range postingLists {
 		if postingLists[i].Len() == 0 {
 			return NewPostingList(make([]*posting.Posting, 0))
 		}
 		postingListCursors[i] = postingLists[i].Cursor()
-		maxPosting = maxPosting.Max(postingListCursors[i].Value())
 	}
 
 	result := make([]*posting.Posting, 0)
 
 POSTING_LOOP:
-	for {
-		matchCount := 0
-		// すべてのカーソルに存在するdocIDを探す
-		for index := range postingListCursors {
-			cursor := postingListCursors[index]
+	for searchNextMatchDocID(postingListCursors) {
 
-			if cursor.Value().GetDocID() < maxPosting.GetDocID() {
-				// カーソルを読み終わったら終了
-				if !cursor.Skip(maxPosting) {
-					break POSTING_LOOP
-				}
-				maxPosting = maxPosting.Max(cursor.Value())
-				break
-			}
-			matchCount++
-		}
-		if matchCount < len(postingListCursors) {
-			continue
+		postingList := make([]*posting.Posting, len(postingListCursors))
+		for i := range postingListCursors {
+			postingList[i] = postingListCursors[i].Value()
 		}
 
-		// positionがマッチするかを探索
-		positionCursors := make([]*position.PositionsCursor, len(postingListCursors))
-		for i, v := range postingListCursors {
-			positionCursors[i] = v.Value().GetPositions().Cursor()
-		}
-
-		if positionCursors[0].Len() == 0 {
-			for index := range postingListCursors {
-				if !postingListCursors[index].Next() {
-					break POSTING_LOOP
-				}
-			}
-		}
-
-		matchPositions := make([]int64, 0)
-
-	POSITION_LOOP:
-		for {
-			positionMatchCount := 1
-			currentOffset := positionCursors[0].Value()
-			for index := 1; index < len(positionCursors); index++ {
-				absolutePosition := currentOffset + relativePosition[index]
-				for positionCursors[index].Value() < absolutePosition {
-					if !positionCursors[index].Skip(absolutePosition) {
-						break POSITION_LOOP
-					}
-				}
-				if positionCursors[index].Value() == absolutePosition {
-					positionMatchCount++
-				}
-			}
-
-			if positionMatchCount == len(positionCursors) {
-				matchPositions = append(matchPositions, positionCursors[0].Value())
-			}
-			if !positionCursors[0].Next() {
-				break POSITION_LOOP
-			}
-		}
-		if len(matchPositions) > 0 {
-			result = append(
-				result,
-				posting.NewPosting(
-					postingListCursors[0].Value().GetDocID(),
-					position.NewPositions(matchPositions),
-				),
-			)
+		matchPosting := posting.PhraseMatch(postingList, relativePosition)
+		if matchPosting != nil {
+			result = append(result, matchPosting)
 		}
 
 		for index := range postingListCursors {
@@ -150,11 +101,36 @@ POSTING_LOOP:
 			if !cursor.Next() {
 				break POSTING_LOOP
 			}
-			maxPosting = maxPosting.Max(cursor.Value())
 		}
 	}
 
 	return NewPostingList(result)
+}
+
+func searchNextMatchDocID(postingListCursors []*PostingListCursor) bool {
+	maxPosting := posting.NewPosting(0, nil)
+	for {
+		matchCount := 0
+		// すべてのカーソルに存在するdocIDを探す
+		for index := range postingListCursors {
+			cursor := postingListCursors[index]
+			if cursor.Value().Compare(maxPosting) < 0 {
+				// カーソルを読み終わったら終了
+				if !cursor.Skip(maxPosting) {
+					return false
+				}
+				maxPosting = maxPosting.Max(cursor.Value())
+				break
+			} else if cursor.Value().Compare(maxPosting) > 0 {
+				maxPosting = cursor.Value()
+			} else {
+				matchCount++
+			}
+		}
+		if matchCount < len(postingListCursors) {
+			return true
+		}
+	}
 }
 
 func Intersection(postingLists []*PostingList) *PostingList {
@@ -163,36 +139,18 @@ func Intersection(postingLists []*PostingList) *PostingList {
 	}
 
 	postingListCursors := make([]*PostingListCursor, len(postingLists))
-	maxPosting := posting.NewPosting(0, nil)
+
 	for i := range postingLists {
 		if postingLists[i].Len() == 0 {
 			return NewPostingList(make([]*posting.Posting, 0))
 		}
 		postingListCursors[i] = postingLists[i].Cursor()
-		maxPosting = maxPosting.Max(postingListCursors[i].Value())
 	}
 
 	result := make([]*posting.Posting, 0)
 
 POSTING_LOOP:
-	for {
-		matchCount := 0
-		// すべてのカーソルに存在するdocIDを探す
-		for index := range postingListCursors {
-			if postingListCursors[index].Value().Compare(maxPosting) < 0 {
-				// カーソルを読み終わったら終了
-				if !postingListCursors[index].Skip(maxPosting) {
-					break POSTING_LOOP
-				}
-				maxPosting = maxPosting.Max(postingListCursors[index].Value())
-				break
-			}
-			matchCount++
-		}
-		if matchCount < len(postingListCursors) {
-			continue
-		}
-
+	for searchNextMatchDocID(postingListCursors) {
 		// positionをマージ
 		var posting *posting.Posting
 		for _, v := range postingListCursors {

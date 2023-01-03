@@ -10,7 +10,7 @@ type Expression struct {
 	or               []*Expression
 	not              *Expression
 	phrase           []*Expression
-	relativePosition []int64
+	relativePosition []uint32
 	feature          *FeatureSpec
 }
 
@@ -28,7 +28,7 @@ func NewNot(value *Expression) *Expression {
 	return &Expression{not: value}
 }
 
-func NewPhrase(arr []*Expression, relativePosition []int64) *Expression {
+func NewPhrase(arr []*Expression, relativePosition []uint32) *Expression {
 	return &Expression{
 		phrase:           arr,
 		relativePosition: relativePosition,
@@ -43,7 +43,7 @@ func (b Expression) And() []*Expression {
 	return b.and
 }
 
-func (b Expression) RelativePosition() []int64 {
+func (b Expression) RelativePosition() []uint32 {
 	return b.relativePosition
 }
 

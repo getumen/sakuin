@@ -16,4 +16,5 @@ type IndexStorage interface {
 		ctx context.Context,
 		conds []*termcond.TermCondition,
 	) (*invertedindex.InvertedIndex, error)
+	Close() error
 }

@@ -3,7 +3,6 @@ package postinglist_test
 import (
 	"testing"
 
-	"github.com/getumen/sakuin/position"
 	"github.com/getumen/sakuin/posting"
 	"github.com/getumen/sakuin/postinglist"
 	"github.com/stretchr/testify/require"
@@ -12,7 +11,7 @@ import (
 func TestPhraseMatch(t *testing.T) {
 	type args struct {
 		postingLists     []*postinglist.PostingList
-		relativePosition []int64
+		relativePosition []uint32
 	}
 	tests := []struct {
 		name string
@@ -24,20 +23,20 @@ func TestPhraseMatch(t *testing.T) {
 			args: args{
 				postingLists: []*postinglist.PostingList{
 					postinglist.NewPostingList([]*posting.Posting{
-						posting.NewPosting(1, position.NewPositions([]int64{1})),
+						posting.NewPosting(1, []uint32{1}),
 					}),
 					postinglist.NewPostingList([]*posting.Posting{
-						posting.NewPosting(1, position.NewPositions([]int64{3, 7})),
+						posting.NewPosting(1, []uint32{3, 7}),
 					}),
 					postinglist.NewPostingList([]*posting.Posting{
-						posting.NewPosting(1, position.NewPositions([]int64{5})),
+						posting.NewPosting(1, []uint32{5}),
 					}),
 				},
-				relativePosition: []int64{0, 2, 4},
+				relativePosition: []uint32{0, 2, 4},
 			},
 			want: postinglist.NewPostingList(
 				[]*posting.Posting{
-					posting.NewPosting(1, position.NewPositions([]int64{1})),
+					posting.NewPosting(1, []uint32{1}),
 				},
 			),
 		},
@@ -46,19 +45,19 @@ func TestPhraseMatch(t *testing.T) {
 			args: args{
 				postingLists: []*postinglist.PostingList{
 					postinglist.NewPostingList([]*posting.Posting{
-						posting.NewPosting(1, position.NewPositions([]int64{1, 5, 7})),
-						posting.NewPosting(2, position.NewPositions([]int64{3, 5, 7})),
+						posting.NewPosting(1, []uint32{1, 5, 7}),
+						posting.NewPosting(2, []uint32{3, 5, 7}),
 					}),
 					postinglist.NewPostingList([]*posting.Posting{
-						posting.NewPosting(1, position.NewPositions([]int64{2})),
-						posting.NewPosting(2, position.NewPositions([]int64{2})),
+						posting.NewPosting(1, []uint32{2}),
+						posting.NewPosting(2, []uint32{2}),
 					}),
 				},
-				relativePosition: []int64{0, 1},
+				relativePosition: []uint32{0, 1},
 			},
 			want: postinglist.NewPostingList(
 				[]*posting.Posting{
-					posting.NewPosting(1, position.NewPositions([]int64{1})),
+					posting.NewPosting(1, []uint32{1}),
 				},
 			),
 		},
@@ -88,19 +87,19 @@ func TestIntersection(t *testing.T) {
 			args: args{
 				postingLists: []*postinglist.PostingList{
 					postinglist.NewPostingList([]*posting.Posting{
-						posting.NewPosting(1, position.NewPositions([]int64{1})),
+						posting.NewPosting(1, []uint32{1}),
 					}),
 					postinglist.NewPostingList([]*posting.Posting{
-						posting.NewPosting(1, position.NewPositions([]int64{3, 7})),
+						posting.NewPosting(1, []uint32{3, 7}),
 					}),
 					postinglist.NewPostingList([]*posting.Posting{
-						posting.NewPosting(1, position.NewPositions([]int64{5})),
+						posting.NewPosting(1, []uint32{5}),
 					}),
 				},
 			},
 			want: postinglist.NewPostingList(
 				[]*posting.Posting{
-					posting.NewPosting(1, position.NewPositions([]int64{1, 3, 5, 7})),
+					posting.NewPosting(1, []uint32{1, 3, 5, 7}),
 				},
 			),
 		},
@@ -127,22 +126,22 @@ func TestUnion(t *testing.T) {
 			args: args{
 				postingLists: []*postinglist.PostingList{
 					postinglist.NewPostingList([]*posting.Posting{
-						posting.NewPosting(1, position.NewPositions([]int64{1})),
-						posting.NewPosting(2, position.NewPositions([]int64{1})),
-						posting.NewPosting(4, position.NewPositions([]int64{1, 3, 4})),
+						posting.NewPosting(1, []uint32{1}),
+						posting.NewPosting(2, []uint32{1}),
+						posting.NewPosting(4, []uint32{1, 3, 4}),
 					}),
 					postinglist.NewPostingList([]*posting.Posting{
-						posting.NewPosting(3, position.NewPositions([]int64{1})),
-						posting.NewPosting(4, position.NewPositions([]int64{2, 4})),
+						posting.NewPosting(3, []uint32{1}),
+						posting.NewPosting(4, []uint32{2, 4}),
 					}),
 				},
 			},
 			want: postinglist.NewPostingList(
 				[]*posting.Posting{
-					posting.NewPosting(1, position.NewPositions([]int64{1})),
-					posting.NewPosting(2, position.NewPositions([]int64{1})),
-					posting.NewPosting(3, position.NewPositions([]int64{1})),
-					posting.NewPosting(4, position.NewPositions([]int64{1, 2, 3, 4})),
+					posting.NewPosting(1, []uint32{1}),
+					posting.NewPosting(2, []uint32{1}),
+					posting.NewPosting(3, []uint32{1}),
+					posting.NewPosting(4, []uint32{1, 2, 3, 4}),
 				},
 			),
 		},
@@ -169,19 +168,19 @@ func TestDifference(t *testing.T) {
 			name: "{1,3,5} - {2,3}",
 			args: args{
 				x: postinglist.NewPostingList([]*posting.Posting{
-					posting.NewPosting(1, position.NewPositions([]int64{1})),
-					posting.NewPosting(3, position.NewPositions([]int64{1})),
-					posting.NewPosting(5, position.NewPositions([]int64{1})),
+					posting.NewPosting(1, []uint32{1}),
+					posting.NewPosting(3, []uint32{1}),
+					posting.NewPosting(5, []uint32{1}),
 				}),
 				y: postinglist.NewPostingList([]*posting.Posting{
-					posting.NewPosting(2, position.NewPositions([]int64{1})),
-					posting.NewPosting(3, position.NewPositions([]int64{1})),
+					posting.NewPosting(2, []uint32{1}),
+					posting.NewPosting(3, []uint32{1}),
 				}),
 			},
 			want: postinglist.NewPostingList(
 				[]*posting.Posting{
-					posting.NewPosting(1, position.NewPositions([]int64{1})),
-					posting.NewPosting(5, position.NewPositions([]int64{1})),
+					posting.NewPosting(1, []uint32{1}),
+					posting.NewPosting(5, []uint32{1}),
 				},
 			),
 		},
@@ -189,13 +188,13 @@ func TestDifference(t *testing.T) {
 			name: "{1} - {}",
 			args: args{
 				x: postinglist.NewPostingList([]*posting.Posting{
-					posting.NewPosting(1, position.NewPositions([]int64{1})),
+					posting.NewPosting(1, []uint32{1}),
 				}),
 				y: postinglist.NewPostingList([]*posting.Posting{}),
 			},
 			want: postinglist.NewPostingList(
 				[]*posting.Posting{
-					posting.NewPosting(1, position.NewPositions([]int64{1})),
+					posting.NewPosting(1, []uint32{1}),
 				},
 			),
 		},
