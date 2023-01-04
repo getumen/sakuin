@@ -26,10 +26,10 @@ func (b *InvertedIndexBuilder) AddDocument(doc *document.Document) {
 	for _, f := range doc.Fields() {
 		var pos uint32
 		for _, t := range f.Content() {
-			pos += 1
 			b.elements = append(b.elements, NewIndexElement(
 				f.FieldName(), t, doc.ID(), pos,
 			))
+			pos++
 		}
 	}
 }

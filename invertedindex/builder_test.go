@@ -53,6 +53,17 @@ func TestBuilder(t *testing.T) {
 		fieldindex.NewFieldIndexFromMap(map[fieldname.FieldName]*postinglist.PostingList{
 			"title": postinglist.NewPostingList(
 				[]*posting.Posting{
+					posting.NewPosting(1, []uint32{0}),
+					posting.NewPosting(2, []uint32{0}),
+				},
+			),
+		}),
+	)
+	expected.Put(
+		term.NewText("el"),
+		fieldindex.NewFieldIndexFromMap(map[fieldname.FieldName]*postinglist.PostingList{
+			"title": postinglist.NewPostingList(
+				[]*posting.Posting{
 					posting.NewPosting(1, []uint32{1}),
 					posting.NewPosting(2, []uint32{1}),
 				},
@@ -60,7 +71,7 @@ func TestBuilder(t *testing.T) {
 		}),
 	)
 	expected.Put(
-		term.NewText("el"),
+		term.NewText("ll"),
 		fieldindex.NewFieldIndexFromMap(map[fieldname.FieldName]*postinglist.PostingList{
 			"title": postinglist.NewPostingList(
 				[]*posting.Posting{
@@ -71,22 +82,11 @@ func TestBuilder(t *testing.T) {
 		}),
 	)
 	expected.Put(
-		term.NewText("ll"),
-		fieldindex.NewFieldIndexFromMap(map[fieldname.FieldName]*postinglist.PostingList{
-			"title": postinglist.NewPostingList(
-				[]*posting.Posting{
-					posting.NewPosting(1, []uint32{3}),
-					posting.NewPosting(2, []uint32{3}),
-				},
-			),
-		}),
-	)
-	expected.Put(
 		term.NewText("lo"),
 		fieldindex.NewFieldIndexFromMap(map[fieldname.FieldName]*postinglist.PostingList{
 			"title": postinglist.NewPostingList(
 				[]*posting.Posting{
-					posting.NewPosting(1, []uint32{4}),
+					posting.NewPosting(1, []uint32{3}),
 				},
 			),
 		}),
