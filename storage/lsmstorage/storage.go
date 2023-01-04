@@ -70,7 +70,10 @@ func (m *lsmStorage) Merge(
 		}
 	}
 
-	tx.Write(batch, nil)
+	err = tx.Write(batch, nil)
+	if err != nil {
+		return fmt.Errorf("commit error: %w", err)
+	}
 
 	err = tx.Commit()
 	if err != nil {
