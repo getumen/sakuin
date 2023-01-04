@@ -15,7 +15,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func BenchmarkSearchFloat(b *testing.B) {
+func BenchmarkSearchRange(b *testing.B) {
 	length := 1000000
 	start := 100000
 	hit := 10
@@ -23,6 +23,7 @@ func BenchmarkSearchFloat(b *testing.B) {
 	ctx := context.Background()
 
 	storage := memstorage.NewMemStorage()
+	defer storage.Close()
 
 	writer := writer.NewIndexWriter(storage)
 
@@ -50,14 +51,15 @@ func BenchmarkSearchFloat(b *testing.B) {
 
 	b.Run("search", func(b *testing.B) {
 		for i := 0; i < b.N; i++ {
-			query := expression.NewFeature(expression.NewFeatureSpec(
-				"value", termcond.NewRange(
-					term.NewFloat64(arr[start]),
-					true,
-					term.NewFloat64(arr[end]),
-					false,
-				),
-			))
+			query := expression.NewFeature(
+				expression.NewFeatureSpec(
+					"value", termcond.NewRange(
+						term.NewFloat64(arr[start]),
+						true,
+						term.NewFloat64(arr[end]),
+						false,
+					),
+				))
 			partialIndex, err := storage.GetIndex(ctx, query.TermConditions())
 			require.NoError(b, err)
 

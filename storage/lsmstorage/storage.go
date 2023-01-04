@@ -42,6 +42,8 @@ func (m *lsmStorage) Merge(
 	}
 	it := index.Iterator()
 
+	batch := new(leveldb.Batch)
+
 	for it.Next() {
 		key := it.Key().(term.Term)
 		value := it.Value().(fieldindex.FieldIndex)
@@ -51,11 +53,7 @@ func (m *lsmStorage) Merge(
 			if err != nil {
 				return fmt.Errorf("serialize error: %w", err)
 			}
-			err = tx.Put(key, memoryIndexBlob, nil)
-
-			if err != nil {
-				return fmt.Errorf("put error: %w", err)
-			}
+			batch.Put(key, memoryIndexBlob)
 		} else if err != nil {
 			return fmt.Errorf("fail to get index: %w", err)
 		} else {
@@ -68,13 +66,11 @@ func (m *lsmStorage) Merge(
 			if err != nil {
 				return fmt.Errorf("serialize error: %w", err)
 			}
-			err = tx.Put(key, diskIndexBlob, nil)
-			if err != nil {
-				return fmt.Errorf("put error: %w", err)
-			}
+			batch.Put(key, diskIndexBlob)
 		}
-
 	}
+
+	tx.Write(batch, nil)
 
 	err = tx.Commit()
 	if err != nil {

@@ -29,3 +29,11 @@ func (t *Token) String() string {
 }
 
 type TokenStream []*Token
+
+func (t TokenStream) Terms() []term.Term {
+	result := make([]term.Term, len(t))
+	for i := range t {
+		result[i] = t[i].term
+	}
+	return result
+}
