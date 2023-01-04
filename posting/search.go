@@ -26,7 +26,7 @@ func ExponentialSearch(arr []*Posting, posting *Posting) int {
 var BinarySearch = standardBinarySearchForPosting
 
 func sortBinarySearchForPosting(arr []*Posting, posting *Posting) int {
-	return sort.Search(len(arr), func(i int) bool { return arr[i].docID < posting.docID })
+	return sort.Search(len(arr), func(i int) bool { return arr[i].docID >= posting.docID })
 }
 
 func standardBinarySearchForPosting(arr []*Posting, posting *Posting) int {
@@ -34,7 +34,7 @@ func standardBinarySearchForPosting(arr []*Posting, posting *Posting) int {
 	for left < right {
 		h := int(uint(left+right) >> 1) // avoid overflow when computing h
 		// i ≤ h < j
-		if arr[h].docID >= posting.docID {
+		if arr[h].docID < posting.docID {
 			left = h + 1 // preserves f(i-1) == false
 		} else {
 			right = h // preserves f(j) == true
@@ -84,7 +84,7 @@ func exponentialSearch(arr []uint32, docID uint32) int {
 var binarySearch = standardBinarySearchForPosition
 
 func sortBinarySearchForPosition(arr []uint32, pos uint32) int {
-	return sort.Search(len(arr), func(i int) bool { return arr[i] < pos })
+	return sort.Search(len(arr), func(i int) bool { return arr[i] >= pos })
 }
 
 func standardBinarySearchForPosition(arr []uint32, pos uint32) int {
@@ -92,7 +92,7 @@ func standardBinarySearchForPosition(arr []uint32, pos uint32) int {
 	for left < right {
 		h := int(uint(left+right) >> 1) // avoid overflow when computing h
 		// i ≤ h < j
-		if arr[h] >= pos {
+		if arr[h] < pos {
 			left = h + 1 // preserves f(i-1) == false
 		} else {
 			right = h // preserves f(j) == true
