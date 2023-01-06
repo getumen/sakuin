@@ -1,6 +1,8 @@
 package invertedindex
 
 import (
+	"reflect"
+
 	"github.com/emirpasic/gods/trees/redblacktree"
 	"github.com/getumen/sakuin/expression"
 	"github.com/getumen/sakuin/fieldindex"
@@ -14,12 +16,40 @@ type InvertedIndex struct {
 	// key is term.Term
 	// value is fieldindex.FieldIndex
 	*redblacktree.Tree
+	segmentID int
 }
 
-func NewInvertedIndex() *InvertedIndex {
+func NewInvertedIndex(segmentID int) *InvertedIndex {
 	return &InvertedIndex{
-		Tree: redblacktree.NewWith(term.Comparator),
+		Tree:      redblacktree.NewWith(term.Comparator),
+		segmentID: segmentID,
 	}
+}
+
+func (i InvertedIndex) SegmentID() int {
+	return i.segmentID
+}
+
+func (i *InvertedIndex) Equal(other *InvertedIndex) bool {
+
+	if i.segmentID != other.segmentID {
+		return false
+	}
+	if i.Size() != other.Size() {
+		return false
+	}
+	xIter := i.Iterator()
+	yIter := other.Iterator()
+	for xIter.Next() && yIter.Next() {
+		if i.Comparator(xIter.Key(), yIter.Key()) != 0 {
+
+			return false
+		}
+		if !reflect.DeepEqual(xIter.Value(), yIter.Value()) {
+			return false
+		}
+	}
+	return true
 }
 
 func (i *InvertedIndex) Merge(other *InvertedIndex) {
@@ -118,7 +148,7 @@ func (i InvertedIndex) Search(exp *expression.Expression) *postinglist.PostingLi
 }
 
 func (i InvertedIndex) GetPartialIndex(conds []*termcond.TermCondition) *InvertedIndex {
-	result := NewInvertedIndex()
+	result := NewInvertedIndex(i.segmentID)
 	for _, cond := range conds {
 		node, ok := i.Ceiling(cond.Start())
 		if !ok {

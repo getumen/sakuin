@@ -9,6 +9,7 @@ import (
 	"github.com/getumen/sakuin/analysis/charfilter"
 	"github.com/getumen/sakuin/analysis/tokenizer"
 	"github.com/getumen/sakuin/expression"
+	"github.com/getumen/sakuin/postinglist"
 	"github.com/getumen/sakuin/storage/lsmstorage"
 	"github.com/getumen/sakuin/termcond"
 	"github.com/stretchr/testify/require"
@@ -28,7 +29,7 @@ func BenchmarkSearchWikipedia(b *testing.B) {
 		[]analysis.TokenFilter{},
 	)
 
-	storage, err := lsmstorage.NewLSMStorage(indexPath)
+	storage, err := lsmstorage.NewStorage(indexPath)
 	require.NoError(b, err)
 	defer storage.Close()
 
@@ -48,10 +49,17 @@ func BenchmarkSearchWikipedia(b *testing.B) {
 		}
 
 		query := expression.NewPhrase(phrase, relativePosition)
-		partialIndex, err := storage.GetIndex(ctx, query.TermConditions())
+		it, err := storage.GetIndexIterator(ctx, query.TermConditions())
 		require.NoError(b, err)
 
-		result := partialIndex.Search(query)
+		lists := make([]*postinglist.PostingList, 0)
+
+		for it.HasNext() {
+			value, _ := it.Next()
+			lists = append(lists, value.Search(query))
+		}
+
+		result := postinglist.Union(lists)
 		hits = result.Len()
 	}
 	b.Logf("%d hits\n", hits)

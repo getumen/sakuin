@@ -63,7 +63,7 @@ func indexing(
 	if err != nil {
 		return fmt.Errorf("mkdir error: %w", err)
 	}
-	storage, err := lsmstorage.NewLSMStorage(indexPath)
+	storage, err := lsmstorage.NewStorage(indexPath)
 	if err != nil {
 		return fmt.Errorf("new storage error: %w", err)
 	}
@@ -93,7 +93,9 @@ func indexing(
 		)
 		documents := make([]*document.Document, 0)
 
-		for {
+		count := 0
+
+		for count < 1000000 {
 			page, err := parser.Next()
 			if err != nil {
 				break
@@ -113,7 +115,8 @@ func indexing(
 				),
 			)
 
-			if len(documents) >= 1000 {
+			if len(documents) >= 10 {
+				count += len(documents)
 				docChan <- documents
 				documents = make([]*document.Document, 0)
 			}

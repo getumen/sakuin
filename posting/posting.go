@@ -23,6 +23,10 @@ func NewPosting(
 	}
 }
 
+func (p Posting) DocIDForTest() uint64 {
+	return p.docID
+}
+
 func (p Posting) Compare(other *Posting) int {
 	return int(p.docID) - int(other.docID)
 }
@@ -43,6 +47,10 @@ func (p Posting) Copy() *Posting {
 
 func (p *Posting) Merge(other *Posting) {
 	p.positions.merge(other.positions)
+}
+
+func (p Posting) EstimateSize() int {
+	return len(p.positions) * 4
 }
 
 func Serialize(postings []*Posting) ([]byte, error) {
