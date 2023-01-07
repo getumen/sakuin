@@ -115,7 +115,7 @@ func indexing(
 				),
 			)
 
-			if len(documents) >= 10 {
+			if len(documents) >= 1000 {
 				count += len(documents)
 				docChan <- documents
 				documents = make([]*document.Document, 0)
