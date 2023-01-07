@@ -24,7 +24,8 @@ func TestIndexIterator(t *testing.T) {
 	})
 
 	seg := storageutil.NewSegment(make([]byte, 0))
-	seg.Save(1, f)
+	err := seg.Save(1, f)
+	require.NoError(t, err)
 
 	target := storage.NewIndexIterator(
 		[]term.Term{term.NewText("a"), term.NewText("b"), term.NewText("c")},
