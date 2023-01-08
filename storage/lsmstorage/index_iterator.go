@@ -1,55 +1,29 @@
 package lsmstorage
 
 import (
-	"fmt"
-
-	"github.com/getumen/sakuin/fieldindex"
 	"github.com/getumen/sakuin/invertedindex"
-	"github.com/getumen/sakuin/term"
 )
 
 type indexIterator struct {
-	terms            []term.Term
-	segmentIterators []*SegmentIterator
-	segmentID        int
-	finishedSegment  []bool
+	indexes []*invertedindex.InvertedIndex
+	cur     int
 }
 
 func NewIndexIterator(
-	terms []term.Term,
-	segmentIterators []*SegmentIterator,
+	indexes []*invertedindex.InvertedIndex,
 ) *indexIterator {
 	return &indexIterator{
-		terms:            terms,
-		segmentIterators: segmentIterators,
-		segmentID:        1,
-		finishedSegment:  make([]bool, len(terms)),
+		indexes: indexes,
+		cur:     0,
 	}
 }
 
 func (it indexIterator) HasNext() bool {
-	for i := range it.terms {
-		if !it.finishedSegment[i] {
-			return true
-		}
-	}
-	return false
+	return it.cur < len(it.indexes)
 }
 
-func (it *indexIterator) Next() (*invertedindex.InvertedIndex, error) {
-	index := invertedindex.NewInvertedIndex(it.segmentID)
-	it.segmentID++
-	for i := range it.terms {
-		if it.segmentIterators[i].HasNext() {
-			fieldIndex, err := it.segmentIterators[i].Next()
-			if err != nil {
-				return nil, fmt.Errorf("fail to deserialize: %w", err)
-			}
-			index.Put(it.terms[i], fieldIndex)
-			it.finishedSegment[i] = !it.segmentIterators[i].HasNext()
-		} else {
-			index.Put(it.terms[i], fieldindex.NewFieldIndex())
-		}
-	}
-	return index, nil
+func (it *indexIterator) Next() *invertedindex.InvertedIndex {
+	result := it.indexes[it.cur]
+	it.cur++
+	return result
 }

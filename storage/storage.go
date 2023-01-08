@@ -21,5 +21,5 @@ type IndexStorage interface {
 
 type IndexIterator interface {
 	HasNext() bool
-	Next() (*invertedindex.InvertedIndex, error)
+	Next() *invertedindex.InvertedIndex
 }

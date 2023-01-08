@@ -55,7 +55,7 @@ func BenchmarkSearchWikipedia(b *testing.B) {
 		lists := make([]*postinglist.PostingList, 0)
 
 		for it.HasNext() {
-			value, _ := it.Next()
+			value := it.Next()
 			lists = append(lists, value.Search(query))
 		}
 

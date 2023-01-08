@@ -2,6 +2,8 @@ package lsmstorage
 
 import (
 	"context"
+	"encoding/binary"
+	"errors"
 	"fmt"
 
 	"github.com/getumen/sakuin/fieldindex"
@@ -12,6 +14,7 @@ import (
 	"github.com/syndtr/goleveldb/leveldb"
 	"github.com/syndtr/goleveldb/leveldb/filter"
 	"github.com/syndtr/goleveldb/leveldb/opt"
+	"github.com/syndtr/goleveldb/leveldb/util"
 )
 
 type lsmStorage struct {
@@ -35,6 +38,23 @@ func NewStorage(path string) (*lsmStorage, error) {
 	}, nil
 }
 
+func getTerm(key []byte) term.Term {
+	result := make([]byte, len(key)-4)
+	copy(result, key[:len(key)-4])
+	return result
+}
+
+func getSegmentID(key []byte) uint32 {
+	return binary.LittleEndian.Uint32(key[len(key)-4:])
+}
+
+func getDBKey(term term.Term, segmentID uint32) []byte {
+	key := make([]byte, 0)
+	key = append(key, term...)
+	key = binary.LittleEndian.AppendUint32(key, segmentID)
+	return key
+}
+
 func (m *lsmStorage) Merge(
 	ctx context.Context,
 	index *invertedindex.InvertedIndex,
@@ -45,45 +65,61 @@ func (m *lsmStorage) Merge(
 	}
 	it := index.Iterator()
 
-	terms := make([]term.Term, 0)
-	segments := make([]*Segment, 0)
+	availableSegment := make([]bool, 0)
 
-	var maxSegmentID int
 	for it.Next() {
 		key := it.Key().(term.Term)
-		terms = append(terms, key)
-
 		value := it.Value().(fieldindex.FieldIndex)
 
-		diskIndexBlob, err := tx.Get(key.Raw(), nil)
-		if err == leveldb.ErrNotFound {
-			seg := NewSegment(make([]byte, 0))
-			segments = append(segments, seg)
-			maxSegmentID = max(maxSegmentID, seg.FindAvailableSegment(value.EstimateSize(), maxSegmentSize))
-		} else if err != nil {
-			return fmt.Errorf("fail to get index: %w", err)
-		} else {
-			seg := NewSegment(diskIndexBlob)
-			segments = append(segments, seg)
-			maxSegmentID = max(maxSegmentID, seg.FindAvailableSegment(value.EstimateSize(), maxSegmentSize))
+		dbIter := tx.NewIterator(util.BytesPrefix(key.Raw()), nil)
+
+		for dbIter.Next() {
+			segmentID := getSegmentID(dbIter.Key())
+
+			for i := len(availableSegment); i <= int(segmentID); i++ {
+				availableSegment = append(availableSegment, true)
+			}
+
+			availableSegment[segmentID] = availableSegment[segmentID] && len(dbIter.Value())+value.EstimateSize() < maxSegmentSize
 		}
 	}
 
 	it = index.Iterator()
 	batch := new(leveldb.Batch)
 
-	for i := 0; i < len(terms) && it.Next(); i++ {
-		memoryFieldIndex := it.Value().(fieldindex.FieldIndex)
-		fieldIndex, err := segments[i].Get(maxSegmentID)
-		if err != nil {
-			return fmt.Errorf("fail to merge index: %w", err)
+	availableSegmentID := len(availableSegment)
+	for i := 0; i < len(availableSegment); i++ {
+		if availableSegment[i] {
+			availableSegmentID = i
+			break
 		}
-		fieldIndex.Merge(memoryFieldIndex)
-		err = segments[i].Save(maxSegmentID, fieldIndex)
-		if err != nil {
-			return fmt.Errorf("fail to merge index: %w", err)
+	}
+
+	for it.Next() {
+		dbKey := getDBKey(it.Key().(term.Term), uint32(availableSegmentID))
+		memoryIndex := it.Value().(fieldindex.FieldIndex)
+		value, err := tx.Get(dbKey, nil)
+		if errors.Is(err, leveldb.ErrNotFound) {
+			blob, err := memoryIndex.Serialize()
+			if err != nil {
+				return fmt.Errorf("fail to merge: %w", err)
+			}
+			batch.Put(dbKey, blob)
+			continue
 		}
-		batch.Put(terms[i], segments[i].Bytes())
+		if err != nil {
+			return fmt.Errorf("fail to merge: %w", err)
+		}
+		dbIndex, err := fieldindex.Deserialize(value)
+		if err != nil {
+			return fmt.Errorf("fail to merge: %w", err)
+		}
+		dbIndex.Merge(memoryIndex)
+		blob, err := dbIndex.Serialize()
+		if err != nil {
+			return fmt.Errorf("fail to merge: %w", err)
+		}
+		batch.Put(dbKey, blob)
 	}
 
 	err = tx.Write(batch, nil)
@@ -98,13 +134,6 @@ func (m *lsmStorage) Merge(
 	return nil
 }
 
-func max(x, y int) int {
-	if x < y {
-		return y
-	}
-	return x
-}
-
 func (m *lsmStorage) GetIndexIterator(
 	ctx context.Context,
 	conds []*termcond.TermCondition,
@@ -114,14 +143,14 @@ func (m *lsmStorage) GetIndexIterator(
 		return nil, fmt.Errorf("fail to get snapshot: %w", err)
 	}
 
-	terms := make([]term.Term, 0)
-	segmentIterators := make([]*SegmentIterator, 0)
+	indexes := make([]*invertedindex.InvertedIndex, 0)
 
 	for _, cond := range conds {
 		iter := snapshot.NewIterator(nil, nil)
 		for iter.Seek(cond.Start().Raw()); iter.Valid(); iter.Next() {
-			key := copyBytes(iter.Key())
-			termKey := term.Term(key)
+			key := iter.Key()
+			termKey := getTerm(key)
+			segmentID := getSegmentID(key)
 			if (!cond.IncludeEnd() && term.Comparator(cond.End(), termKey) == 0) ||
 				term.Comparator(cond.End(), termKey) < 0 {
 				break
@@ -129,10 +158,15 @@ func (m *lsmStorage) GetIndexIterator(
 			if !cond.IncludeStart() && term.Comparator(cond.Start(), termKey) == 0 {
 				continue
 			}
-			// cond contains key
-			terms = append(terms, termKey)
-			seg := NewSegment(copyBytes(iter.Value()))
-			segmentIterators = append(segmentIterators, seg.Iterator())
+
+			for i := len(indexes); i <= int(segmentID); i++ {
+				indexes = append(indexes, invertedindex.NewInvertedIndex(i))
+			}
+			index, err := fieldindex.Deserialize(iter.Value())
+			if err != nil {
+				return nil, fmt.Errorf("fail to get index iterator: %w", err)
+			}
+			indexes[segmentID].Put(termKey, index)
 		}
 		iter.Release()
 		if err := iter.Error(); err != nil {
@@ -140,15 +174,9 @@ func (m *lsmStorage) GetIndexIterator(
 		}
 	}
 
-	indexIterator := NewIndexIterator(terms, segmentIterators)
+	indexIterator := NewIndexIterator(indexes)
 
 	return indexIterator, nil
-}
-
-func copyBytes(value []byte) []byte {
-	result := make([]byte, len(value))
-	copy(result, value)
-	return result
 }
 
 func (m *lsmStorage) Close() error {

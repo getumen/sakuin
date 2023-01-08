@@ -42,5 +42,4 @@ func BenchmarkIndexFloat(b *testing.B) {
 			require.NoError(b, writer.CreateDocuments(ctx, documents))
 		}
 	})
-
 }

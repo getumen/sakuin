@@ -61,13 +61,14 @@ func TestStorage(t *testing.T) {
 		expectedPostings[i] = posting.NewPosting(uint64(i), []uint32{0})
 	}
 
-	expected := invertedindex.NewInvertedIndex(1)
+	expected := invertedindex.NewInvertedIndex(0)
 	expected.Put(term.NewText("a"), fieldindex.NewFieldIndexFromMap(map[fieldname.FieldName]*postinglist.PostingList{
 		"title": postinglist.NewPostingList(expectedPostings),
 		"body":  postinglist.NewPostingList(expectedPostings),
 	}))
 
-	actual, err := indexIterator.Next()
+	actual := indexIterator.Next()
 	require.NoError(t, err)
+
 	require.True(t, expected.Equal(actual))
 }

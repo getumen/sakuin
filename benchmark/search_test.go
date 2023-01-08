@@ -69,8 +69,7 @@ func TestSearchRange(t *testing.T) {
 		lists := make([]*postinglist.PostingList, 0)
 
 		for it.HasNext() {
-			value, err := it.Next()
-			require.NoError(t, err)
+			value := it.Next()
 			if value.Size() == 0 {
 				continue
 			}
@@ -137,8 +136,7 @@ func BenchmarkSearchRange(b *testing.B) {
 			lists := make([]*postinglist.PostingList, 0)
 
 			for it.HasNext() {
-				value, err := it.Next()
-				require.NoError(b, err)
+				value := it.Next()
 				if value.Size() == 0 {
 					continue
 				}
@@ -230,8 +228,7 @@ func TestSearchManyPostings(t *testing.T) {
 		lists := make([]*postinglist.PostingList, 0)
 
 		for it.HasNext() {
-			value, err := it.Next()
-			require.NoError(t, err)
+			value := it.Next()
 			if value.Size() == 0 {
 				continue
 			}
@@ -323,8 +320,7 @@ func BenchmarkSearchManyPostings(b *testing.B) {
 			lists := make([]*postinglist.PostingList, 0)
 
 			for it.HasNext() {
-				value, err := it.Next()
-				require.NoError(b, err)
+				value := it.Next()
 				if value.Size() == 0 {
 					continue
 				}
