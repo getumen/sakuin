@@ -86,7 +86,7 @@ func TestSearchTextInLSMTree(t *testing.T) {
 			lists := make([]*postinglist.PostingList, 0)
 
 			for indexIterator.HasNext() {
-				index, err := indexIterator.Next()
+				index := indexIterator.Next()
 				require.NoError(t, err)
 				lists = append(lists, index.Search(query))
 			}
