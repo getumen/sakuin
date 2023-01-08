@@ -33,7 +33,7 @@ func BenchmarkSearchWikipedia(b *testing.B) {
 	require.NoError(b, err)
 	defer storage.Close()
 
-	var hits int
+	var hits, segmentNum int
 
 	for i := 0; i < b.N; i++ {
 		ctx := context.Background()
@@ -54,13 +54,16 @@ func BenchmarkSearchWikipedia(b *testing.B) {
 
 		lists := make([]*postinglist.PostingList, 0)
 
+		var segNum int
 		for it.HasNext() {
 			value := it.Next()
 			lists = append(lists, value.Search(query))
+			segNum++
 		}
 
 		result := postinglist.Union(lists)
 		hits = result.Len()
+		segmentNum = segNum
 	}
-	b.Logf("%d hits\n", hits)
+	b.Logf("%d hits in %d segment\n", hits, segmentNum)
 }
