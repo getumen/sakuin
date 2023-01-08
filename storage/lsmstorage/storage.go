@@ -7,7 +7,6 @@ import (
 	"github.com/getumen/sakuin/fieldindex"
 	"github.com/getumen/sakuin/invertedindex"
 	"github.com/getumen/sakuin/storage"
-	"github.com/getumen/sakuin/storageutil"
 	"github.com/getumen/sakuin/term"
 	"github.com/getumen/sakuin/termcond"
 	"github.com/syndtr/goleveldb/leveldb"
@@ -47,7 +46,7 @@ func (m *lsmStorage) Merge(
 	it := index.Iterator()
 
 	terms := make([]term.Term, 0)
-	segments := make([]*storageutil.Segment, 0)
+	segments := make([]*Segment, 0)
 
 	var maxSegmentID int
 	for it.Next() {
@@ -58,13 +57,13 @@ func (m *lsmStorage) Merge(
 
 		diskIndexBlob, err := tx.Get(key.Raw(), nil)
 		if err == leveldb.ErrNotFound {
-			seg := storageutil.NewSegment(make([]byte, 0))
+			seg := NewSegment(make([]byte, 0))
 			segments = append(segments, seg)
 			maxSegmentID = max(maxSegmentID, seg.FindAvailableSegment(value.EstimateSize(), maxSegmentSize))
 		} else if err != nil {
 			return fmt.Errorf("fail to get index: %w", err)
 		} else {
-			seg := storageutil.NewSegment(diskIndexBlob)
+			seg := NewSegment(diskIndexBlob)
 			segments = append(segments, seg)
 			maxSegmentID = max(maxSegmentID, seg.FindAvailableSegment(value.EstimateSize(), maxSegmentSize))
 		}
@@ -109,14 +108,14 @@ func max(x, y int) int {
 func (m *lsmStorage) GetIndexIterator(
 	ctx context.Context,
 	conds []*termcond.TermCondition,
-) (*storage.IndexIterator, error) {
+) (storage.IndexIterator, error) {
 	snapshot, err := m.index.GetSnapshot()
 	if err != nil {
 		return nil, fmt.Errorf("fail to get snapshot: %w", err)
 	}
 
 	terms := make([]term.Term, 0)
-	segmentIterators := make([]*storageutil.SegmentIterator, 0)
+	segmentIterators := make([]*SegmentIterator, 0)
 
 	for _, cond := range conds {
 		iter := snapshot.NewIterator(nil, nil)
@@ -132,7 +131,7 @@ func (m *lsmStorage) GetIndexIterator(
 			}
 			// cond contains key
 			terms = append(terms, termKey)
-			seg := storageutil.NewSegment(copyBytes(iter.Value()))
+			seg := NewSegment(copyBytes(iter.Value()))
 			segmentIterators = append(segmentIterators, seg.Iterator())
 		}
 		iter.Release()
@@ -141,7 +140,7 @@ func (m *lsmStorage) GetIndexIterator(
 		}
 	}
 
-	indexIterator := storage.NewIndexIterator(terms, segmentIterators)
+	indexIterator := NewIndexIterator(terms, segmentIterators)
 
 	return indexIterator, nil
 }
