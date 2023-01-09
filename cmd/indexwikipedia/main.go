@@ -93,9 +93,7 @@ func indexing(
 		)
 		documents := make([]*document.Document, 0)
 
-		count := 0
-
-		for count < 1000000 {
+		for {
 			page, err := parser.Next()
 			if err != nil {
 				break
@@ -116,7 +114,6 @@ func indexing(
 			)
 
 			if len(documents) >= 1000 {
-				count += len(documents)
 				docChan <- documents
 				documents = make([]*document.Document, 0)
 			}
