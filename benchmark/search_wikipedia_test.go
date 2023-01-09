@@ -7,6 +7,7 @@ import (
 
 	"github.com/getumen/sakuin/analysis"
 	"github.com/getumen/sakuin/analysis/charfilter"
+	"github.com/getumen/sakuin/analysis/tokenfilter"
 	"github.com/getumen/sakuin/analysis/tokenizer"
 	"github.com/getumen/sakuin/expression"
 	"github.com/getumen/sakuin/postinglist"
@@ -21,14 +22,18 @@ func BenchmarkSearchWikipedia(b *testing.B) {
 
 	indexPath := path.Join(tmpDir, "index")
 
+	japaneseTokenizer, err := tokenizer.NewJapaneseTokinizer()
+	require.NoError(b, err)
+
 	analyzer := analysis.NewAnalyzer(
 		[]analysis.CharFilter{
 			charfilter.NewUnicodeNFKCFilter(),
 		},
-		tokenizer.NewBigramTokenizer(),
-		[]analysis.TokenFilter{},
+		japaneseTokenizer,
+		[]analysis.TokenFilter{
+			tokenfilter.NewJapanaseStopwords(),
+		},
 	)
-
 	storage, err := lsmstorage.NewStorage(indexPath)
 	require.NoError(b, err)
 	defer storage.Close()
