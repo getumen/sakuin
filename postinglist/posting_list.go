@@ -19,6 +19,10 @@ func NewPostingList(
 	}
 }
 
+func (p *PostingList) String() string {
+	return fmt.Sprintf("%+v", *p)
+}
+
 func (p PostingList) Serialize() ([]byte, error) {
 	return posting.Serialize(p.postingList)
 }
@@ -31,6 +35,14 @@ func Deserialize(blob []byte) (*PostingList, error) {
 	return &PostingList{
 		postingList: pl,
 	}, nil
+}
+
+func (p PostingList) EstimateSize() int {
+	var size int
+	for _, posting := range p.postingList {
+		size += posting.EstimateSize()
+	}
+	return size
 }
 
 func (p *PostingList) Merge(other *PostingList) {

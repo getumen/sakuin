@@ -1,6 +1,6 @@
 syntax = "proto3";
 
-package log.v1;
+package fieldindex;
 
 option go_package = "github.com/getumen/sakuin/fieldindex";
 
