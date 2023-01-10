@@ -47,7 +47,7 @@ func TestBuilder(t *testing.T) {
 
 	index := builder.Build()
 
-	expected := invertedindex.NewInvertedIndex()
+	expected := invertedindex.NewInvertedIndex(0)
 	expected.Put(
 		term.NewText("he"),
 		fieldindex.NewFieldIndexFromMap(map[fieldname.FieldName]*postinglist.PostingList{

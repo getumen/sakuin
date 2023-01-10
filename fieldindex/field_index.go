@@ -30,6 +30,15 @@ func (f FieldIndex) Merge(other FieldIndex) {
 	}
 }
 
+func (f FieldIndex) EstimateSize() int {
+	var size int
+	for k, v := range f {
+		size += len(k)
+		size += v.EstimateSize()
+	}
+	return size
+}
+
 func Deserialize(blob []byte) (FieldIndex, error) {
 	p := &Record{}
 

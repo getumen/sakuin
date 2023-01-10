@@ -35,11 +35,15 @@ func (b *InvertedIndexBuilder) AddDocument(doc *document.Document) {
 }
 
 func (b *InvertedIndexBuilder) Build() *InvertedIndex {
+	if len(b.elements) == 0 {
+		return NewInvertedIndex(0)
+	}
+
 	sort.Slice(b.elements, func(i, j int) bool {
 		return b.elements[i].compare(b.elements[j]) < 0
 	})
 
-	index := NewInvertedIndex()
+	index := NewInvertedIndex(0)
 	var lastIndexElement *indexElement
 	fieldIndex := fieldindex.NewFieldIndex()
 	postings := make([]*posting.Posting, 0)

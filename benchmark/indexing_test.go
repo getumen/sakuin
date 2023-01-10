@@ -6,14 +6,14 @@ import (
 	"testing"
 
 	"github.com/getumen/sakuin/document"
-	"github.com/getumen/sakuin/storage/memstorage"
+	"github.com/getumen/sakuin/storage/lsmstorage"
 	"github.com/getumen/sakuin/term"
 	"github.com/getumen/sakuin/writer"
 	"github.com/stretchr/testify/require"
 )
 
 func BenchmarkIndexFloat(b *testing.B) {
-	length := 1000000
+	length := 1000
 	ctx := context.Background()
 
 	arr := make([]float64, length)
@@ -36,10 +36,10 @@ func BenchmarkIndexFloat(b *testing.B) {
 
 	b.Run("indexing", func(b *testing.B) {
 		for i := 0; i < b.N; i++ {
-			storage := memstorage.NewMemStorage()
+			storage, err := lsmstorage.NewStorage(b.TempDir())
+			require.NoError(b, err)
 			writer := writer.NewIndexWriter(storage)
 			require.NoError(b, writer.CreateDocuments(ctx, documents))
 		}
 	})
-
 }

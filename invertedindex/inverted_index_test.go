@@ -27,7 +27,7 @@ func TestInvertedIndex_Search(t *testing.T) {
 		{
 			name: "search ab",
 			get: func() *invertedindex.InvertedIndex {
-				result := invertedindex.NewInvertedIndex()
+				result := invertedindex.NewInvertedIndex(1)
 				result.Put(
 					term.NewText("a"),
 					fieldindex.NewFieldIndexFromMap(
@@ -81,7 +81,7 @@ func TestInvertedIndex_Search(t *testing.T) {
 		{
 			name: "search a and not b",
 			get: func() *invertedindex.InvertedIndex {
-				result := invertedindex.NewInvertedIndex()
+				result := invertedindex.NewInvertedIndex(1)
 				result.Put(
 					term.NewText("a"),
 					fieldindex.NewFieldIndexFromMap(
@@ -134,7 +134,7 @@ func TestInvertedIndex_Search(t *testing.T) {
 		{
 			name: "search a or b",
 			get: func() *invertedindex.InvertedIndex {
-				result := invertedindex.NewInvertedIndex()
+				result := invertedindex.NewInvertedIndex(1)
 				result.Put(
 					term.NewText("a"),
 					fieldindex.NewFieldIndexFromMap(
@@ -184,7 +184,7 @@ func TestInvertedIndex_Search(t *testing.T) {
 		{
 			name: "search ab and not cd",
 			get: func() *invertedindex.InvertedIndex {
-				result := invertedindex.NewInvertedIndex()
+				result := invertedindex.NewInvertedIndex(1)
 				result.Put(
 					term.NewText("a"),
 					fieldindex.NewFieldIndexFromMap(
@@ -273,7 +273,7 @@ func TestInvertedIndex_Search(t *testing.T) {
 		{
 			name: "search (ab and not cd) or e",
 			get: func() *invertedindex.InvertedIndex {
-				result := invertedindex.NewInvertedIndex()
+				result := invertedindex.NewInvertedIndex(1)
 				result.Put(
 					term.NewText("a"),
 					fieldindex.NewFieldIndexFromMap(
@@ -401,7 +401,7 @@ func TestInvertedIndex_GetPostingListInFeature(t *testing.T) {
 		{
 			name: "equal",
 			get: func() *invertedindex.InvertedIndex {
-				result := invertedindex.NewInvertedIndex()
+				result := invertedindex.NewInvertedIndex(1)
 				result.Put(
 					term.NewText("a"),
 					fieldindex.NewFieldIndexFromMap(
@@ -441,7 +441,7 @@ func TestInvertedIndex_GetPostingListInFeature(t *testing.T) {
 		{
 			name: "range",
 			get: func() *invertedindex.InvertedIndex {
-				result := invertedindex.NewInvertedIndex()
+				result := invertedindex.NewInvertedIndex(1)
 				result.Put(
 					term.NewText("a"),
 					fieldindex.NewFieldIndexFromMap(

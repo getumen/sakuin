@@ -12,9 +12,14 @@ type IndexStorage interface {
 		ctx context.Context,
 		index *invertedindex.InvertedIndex,
 	) error
-	GetIndex(
+	GetIndexIterator(
 		ctx context.Context,
 		conds []*termcond.TermCondition,
-	) (*invertedindex.InvertedIndex, error)
+	) (IndexIterator, error)
 	Close() error
+}
+
+type IndexIterator interface {
+	HasNext() bool
+	Next() *invertedindex.InvertedIndex
 }
