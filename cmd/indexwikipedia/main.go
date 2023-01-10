@@ -15,7 +15,6 @@ import (
 	"github.com/dustin/go-wikiparse"
 	"github.com/getumen/sakuin/analysis"
 	"github.com/getumen/sakuin/analysis/charfilter"
-	"github.com/getumen/sakuin/analysis/tokenfilter"
 	"github.com/getumen/sakuin/analysis/tokenizer"
 	"github.com/getumen/sakuin/document"
 	"github.com/getumen/sakuin/storage/lsmstorage"
@@ -86,19 +85,12 @@ func indexing(
 			return fmt.Errorf("new parser error: %w", err)
 		}
 
-		japaneseTokenizer, err := tokenizer.NewJapaneseTokinizer()
-		if err != nil {
-			return fmt.Errorf("japaneseTokenizer error: %w", err)
-		}
-
 		analyzer := analysis.NewAnalyzer(
 			[]analysis.CharFilter{
 				charfilter.NewUnicodeNFKCFilter(),
 			},
-			japaneseTokenizer,
-			[]analysis.TokenFilter{
-				tokenfilter.NewJapanaseStopwords(),
-			},
+			tokenizer.NewBigramTokenizer(),
+			[]analysis.TokenFilter{},
 		)
 		documents := make([]*document.Document, 0)
 

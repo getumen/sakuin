@@ -71,24 +71,24 @@ func Simplify(conds []*TermCondition) []*TermCondition {
 			continue
 		}
 		// no overlap
-		if term.Comparator(result[i-1].end, v.start) < 0 ||
-			(term.Comparator(result[i-1].end, v.start) == 0 &&
-				!result[i-1].includeEnd && !v.includeStart) {
+		if term.Comparator(result[len(result)-1].end, v.start) < 0 ||
+			(term.Comparator(result[len(result)-1].end, v.start) == 0 &&
+				!result[len(result)-1].includeEnd && !v.includeStart) {
 			result = append(result, v)
 			continue
 		}
 		// result[i-1] contains v
-		if term.Comparator(v.end, result[i-1].end) < 0 {
+		if term.Comparator(v.end, result[len(result)-1].end) < 0 {
 			continue
 		}
 		// ends is equal
-		if term.Comparator(v.end, result[i-1].end) == 0 {
-			result[i-1].includeEnd = result[i-1].includeEnd || v.includeEnd
+		if term.Comparator(v.end, result[len(result)-1].end) == 0 {
+			result[len(result)-1].includeEnd = result[len(result)-1].includeEnd || v.includeEnd
 			continue
 		}
 		// partially overlap
-		result[i-1].end = v.end
-		result[i-1].includeEnd = v.includeEnd
+		result[len(result)-1].end = v.end
+		result[len(result)-1].includeEnd = v.includeEnd
 	}
 	return result
 }
