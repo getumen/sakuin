@@ -4,6 +4,7 @@ import (
 	"context"
 	"testing"
 
+	"github.com/getumen/sakuin/analysis/token"
 	"github.com/getumen/sakuin/document"
 	"github.com/getumen/sakuin/fieldindex"
 	"github.com/getumen/sakuin/fieldname"
@@ -30,17 +31,17 @@ func TestStorage(t *testing.T) {
 		builder.AddDocument(document.NewDocument(
 			uint64(i),
 			[]*document.Field{
-				document.NewField("title", []term.Term{
-					term.NewText("a"),
-					term.NewText("b"),
-					term.NewText("c"),
-					term.NewText("d"),
+				document.NewField("title", []*token.Token{
+					token.NewToken(term.NewText("a"), 0, 0),
+					token.NewToken(term.NewText("b"), 1, 1),
+					token.NewToken(term.NewText("c"), 2, 2),
+					token.NewToken(term.NewText("d"), 3, 3),
 				}),
-				document.NewField("body", []term.Term{
-					term.NewText("a"),
-					term.NewText("b"),
-					term.NewText("c"),
-					term.NewText("d"),
+				document.NewField("body", []*token.Token{
+					token.NewToken(term.NewText("a"), 0, 0),
+					token.NewToken(term.NewText("b"), 1, 1),
+					token.NewToken(term.NewText("c"), 2, 2),
+					token.NewToken(term.NewText("d"), 3, 3),
 				}),
 			}))
 		index := builder.Build()

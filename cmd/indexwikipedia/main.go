@@ -108,8 +108,8 @@ func indexing(
 				document.NewDocument(
 					page.ID,
 					[]*document.Field{
-						document.NewField("title", titleTokens.Terms()),
-						document.NewField("body", bodyTokens.Terms()),
+						document.NewField("title", titleTokens),
+						document.NewField("body", bodyTokens),
 					},
 				),
 			)

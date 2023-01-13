@@ -5,6 +5,7 @@ import (
 	"math/rand"
 	"testing"
 
+	"github.com/getumen/sakuin/analysis/token"
 	"github.com/getumen/sakuin/document"
 	"github.com/getumen/sakuin/storage/lsmstorage"
 	"github.com/getumen/sakuin/term"
@@ -28,7 +29,9 @@ func BenchmarkIndexFloat(b *testing.B) {
 			[]*document.Field{
 				document.NewField(
 					"value",
-					[]term.Term{term.NewFloat64(f)},
+					token.TokenStream{
+						token.NewToken(term.NewFloat64(f), 0, 0),
+					},
 				),
 			},
 		)

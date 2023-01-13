@@ -32,7 +32,11 @@ func (t japaneseTokenizer) Tokenize(content string) token.TokenStream {
 	t.posFilter.Drop(&tokens)
 	result := make(token.TokenStream, 0)
 	for _, s := range tokens {
-		result = append(result, token.NewToken(term.NewText(s.Surface)))
+		result = append(
+			result,
+			token.NewToken(
+				term.NewText(s.Surface), uint32(s.Start), uint32(s.End),
+			))
 	}
 	return result
 }

@@ -31,10 +31,10 @@ func Test_japaneseTokenizer(t *testing.T) {
 				content: "すもももももももものうち",
 			},
 			want: token.TokenStream{
-				token.NewToken(term.NewText("すもも")),
-				token.NewToken(term.NewText("もも")),
-				token.NewToken(term.NewText("もも")),
-				token.NewToken(term.NewText("うち")),
+				token.NewToken(term.NewText("すもも"), 0, 3),
+				token.NewToken(term.NewText("もも"), 4, 6),
+				token.NewToken(term.NewText("もも"), 7, 9),
+				token.NewToken(term.NewText("うち"), 10, 12),
 			},
 		},
 	}

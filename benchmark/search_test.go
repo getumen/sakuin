@@ -6,6 +6,7 @@ import (
 	"sort"
 	"testing"
 
+	"github.com/getumen/sakuin/analysis/token"
 	"github.com/getumen/sakuin/document"
 	"github.com/getumen/sakuin/expression"
 	"github.com/getumen/sakuin/postinglist"
@@ -42,7 +43,9 @@ func TestSearchRange(t *testing.T) {
 			[]*document.Field{
 				document.NewField(
 					"value",
-					[]term.Term{term.NewInt64(f)},
+					token.TokenStream{
+						token.NewToken(term.NewInt64(f), 0, 0),
+					},
 				),
 			},
 		)
@@ -109,7 +112,9 @@ func BenchmarkSearchRange(b *testing.B) {
 			[]*document.Field{
 				document.NewField(
 					"value",
-					[]term.Term{term.NewFloat64(f)},
+					token.TokenStream{
+						token.NewToken(term.NewFloat64(f), 0, 0),
+					},
 				),
 			},
 		)
@@ -174,9 +179,9 @@ func TestSearchManyPostings(t *testing.T) {
 					[]*document.Field{
 						document.NewField(
 							"value",
-							[]term.Term{
-								term.NewText("a"),
-								term.NewText("b"),
+							token.TokenStream{
+								token.NewToken(term.NewText("a"), 0, 0),
+								token.NewToken(term.NewText("b"), 1, 1),
 							},
 						),
 					},
@@ -187,17 +192,17 @@ func TestSearchManyPostings(t *testing.T) {
 					[]*document.Field{
 						document.NewField(
 							"value",
-							[]term.Term{
-								term.NewText("a"),
-								term.NewText("a"),
-								term.NewText("a"),
-								term.NewText("a"),
-								term.NewText("a"),
-								term.NewText("a"),
-								term.NewText("a"),
-								term.NewText("a"),
-								term.NewText("a"),
-								term.NewText("a"),
+							token.TokenStream{
+								token.NewToken(term.NewText("a"), 0, 0),
+								token.NewToken(term.NewText("a"), 1, 1),
+								token.NewToken(term.NewText("a"), 2, 2),
+								token.NewToken(term.NewText("a"), 3, 3),
+								token.NewToken(term.NewText("a"), 4, 4),
+								token.NewToken(term.NewText("a"), 5, 5),
+								token.NewToken(term.NewText("a"), 6, 6),
+								token.NewToken(term.NewText("a"), 7, 7),
+								token.NewToken(term.NewText("a"), 8, 8),
+								token.NewToken(term.NewText("a"), 9, 9),
 							},
 						),
 					},
@@ -265,9 +270,9 @@ func BenchmarkSearchManyPostings(b *testing.B) {
 					[]*document.Field{
 						document.NewField(
 							"value",
-							[]term.Term{
-								term.NewText("a"),
-								term.NewText("b"),
+							token.TokenStream{
+								token.NewToken(term.NewText("a"), 0, 0),
+								token.NewToken(term.NewText("b"), 1, 1),
 							},
 						),
 					},
@@ -278,17 +283,17 @@ func BenchmarkSearchManyPostings(b *testing.B) {
 					[]*document.Field{
 						document.NewField(
 							"value",
-							[]term.Term{
-								term.NewText("a"),
-								term.NewText("a"),
-								term.NewText("a"),
-								term.NewText("a"),
-								term.NewText("a"),
-								term.NewText("a"),
-								term.NewText("a"),
-								term.NewText("a"),
-								term.NewText("a"),
-								term.NewText("a"),
+							token.TokenStream{
+								token.NewToken(term.NewText("a"), 0, 0),
+								token.NewToken(term.NewText("a"), 1, 1),
+								token.NewToken(term.NewText("a"), 2, 2),
+								token.NewToken(term.NewText("a"), 3, 3),
+								token.NewToken(term.NewText("a"), 4, 4),
+								token.NewToken(term.NewText("a"), 5, 5),
+								token.NewToken(term.NewText("a"), 6, 6),
+								token.NewToken(term.NewText("a"), 7, 7),
+								token.NewToken(term.NewText("a"), 8, 8),
+								token.NewToken(term.NewText("a"), 9, 9),
 							},
 						),
 					},

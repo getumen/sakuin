@@ -3,6 +3,7 @@ package invertedindex_test
 import (
 	"testing"
 
+	"github.com/getumen/sakuin/analysis/token"
 	"github.com/getumen/sakuin/document"
 	"github.com/getumen/sakuin/fieldindex"
 	"github.com/getumen/sakuin/fieldname"
@@ -16,25 +17,25 @@ import (
 func TestBuilder(t *testing.T) {
 	docs := []*document.Document{
 		document.NewDocument(1, []*document.Field{
-			document.NewField("title", []term.Term{
-				term.NewText("he"),
-				term.NewText("el"),
-				term.NewText("ll"),
-				term.NewText("lo"),
+			document.NewField("title", token.TokenStream{
+				token.NewToken(term.NewText("he"), 0, 1),
+				token.NewToken(term.NewText("el"), 1, 2),
+				token.NewToken(term.NewText("ll"), 2, 3),
+				token.NewToken(term.NewText("lo"), 3, 4),
 			}),
 		}),
 		document.NewDocument(2, []*document.Field{
-			document.NewField("title", []term.Term{
-				term.NewText("he"),
-				term.NewText("el"),
-				term.NewText("ll"),
+			document.NewField("title", token.TokenStream{
+				token.NewToken(term.NewText("he"), 0, 1),
+				token.NewToken(term.NewText("el"), 1, 2),
+				token.NewToken(term.NewText("ll"), 2, 3),
 			}),
 		}),
 		document.NewDocument(2, []*document.Field{
-			document.NewField("title", []term.Term{
-				term.NewText("he"),
-				term.NewText("el"),
-				term.NewText("ll"),
+			document.NewField("title", token.TokenStream{
+				token.NewToken(term.NewText("he"), 0, 1),
+				token.NewToken(term.NewText("el"), 1, 2),
+				token.NewToken(term.NewText("ll"), 2, 3),
 			}),
 		}),
 	}
