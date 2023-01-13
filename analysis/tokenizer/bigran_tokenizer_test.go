@@ -31,10 +31,10 @@ func Test_bigramTokenizer_Tokenize(t *testing.T) {
 				content: "hello",
 			},
 			want: token.TokenStream{
-				token.NewToken(term.NewText("he")),
-				token.NewToken(term.NewText("el")),
-				token.NewToken(term.NewText("ll")),
-				token.NewToken(term.NewText("lo")),
+				token.NewToken(term.NewText("he"), 0, 1),
+				token.NewToken(term.NewText("el"), 1, 2),
+				token.NewToken(term.NewText("ll"), 2, 3),
+				token.NewToken(term.NewText("lo"), 3, 4),
 			},
 		},
 	}

@@ -1,18 +1,18 @@
 package document
 
 import (
+	"github.com/getumen/sakuin/analysis/token"
 	"github.com/getumen/sakuin/fieldname"
-	"github.com/getumen/sakuin/term"
 )
 
 type Field struct {
 	name    fieldname.FieldName
-	content []term.Term
+	content token.TokenStream
 }
 
 func NewField(
 	name fieldname.FieldName,
-	content []term.Term,
+	content token.TokenStream,
 ) *Field {
 	return &Field{
 		name:    name,
@@ -24,7 +24,7 @@ func (f Field) FieldName() fieldname.FieldName {
 	return f.name
 }
 
-func (f Field) Content() []term.Term {
+func (f Field) Content() token.TokenStream {
 	return f.content
 }
 

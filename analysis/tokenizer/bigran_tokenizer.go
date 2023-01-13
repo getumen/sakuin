@@ -22,7 +22,14 @@ func (t bigramTokenizer) Tokenize(content string) token.TokenStream {
 	}
 	chars := strings.Split(content, "")
 	for i := 0; i < len(chars)-1; i++ {
-		result = append(result, token.NewToken(term.NewText(chars[i]+chars[i+1])))
+		result = append(
+			result,
+			token.NewToken(
+				term.NewText(chars[i]+chars[i+1]),
+				uint32(i),
+				uint32(i+1),
+			),
+		)
 	}
 	return result
 }

@@ -4,6 +4,7 @@ import (
 	"context"
 	"testing"
 
+	"github.com/getumen/sakuin/analysis/token"
 	"github.com/getumen/sakuin/document"
 	"github.com/getumen/sakuin/expression"
 	"github.com/getumen/sakuin/posting"
@@ -28,27 +29,27 @@ func TestSearchTextInLSMTree(t *testing.T) {
 		ctx,
 		[]*document.Document{
 			document.NewDocument(1, []*document.Field{
-				document.NewField("content", []term.Term{
-					term.NewText("i"),
-					term.NewText("am"),
-					term.NewText("a"),
-					term.NewText("pen"),
+				document.NewField("content", token.TokenStream{
+					token.NewToken(term.NewText("i"), 0, 1),
+					token.NewToken(term.NewText("am"), 2, 4),
+					token.NewToken(term.NewText("a"), 5, 6),
+					token.NewToken(term.NewText("pen"), 7, 10),
 				}),
 			}),
 			document.NewDocument(2, []*document.Field{
-				document.NewField("content", []term.Term{
-					term.NewText("this"),
-					term.NewText("is"),
-					term.NewText("a"),
-					term.NewText("pen"),
+				document.NewField("content", token.TokenStream{
+					token.NewToken(term.NewText("this"), 0, 4),
+					token.NewToken(term.NewText("is"), 5, 7),
+					token.NewToken(term.NewText("a"), 8, 9),
+					token.NewToken(term.NewText("pen"), 10, 13),
 				}),
 			}),
 			document.NewDocument(3, []*document.Field{
-				document.NewField("content", []term.Term{
-					term.NewText("i"),
-					term.NewText("am"),
-					term.NewText("a"),
-					term.NewText("cat"),
+				document.NewField("content", token.TokenStream{
+					token.NewToken(term.NewText("i"), 0, 1),
+					token.NewToken(term.NewText("am"), 2, 4),
+					token.NewToken(term.NewText("a"), 5, 6),
+					token.NewToken(term.NewText("cat"), 7, 10),
 				}),
 			}),
 		}),
@@ -63,15 +64,15 @@ func TestSearchTextInLSMTree(t *testing.T) {
 			name:  "pen",
 			input: "pen",
 			expected: []*posting.Posting{
-				posting.NewPosting(1, []uint32{3}),
-				posting.NewPosting(2, []uint32{3}),
+				posting.NewPosting(1, []uint32{7}),
+				posting.NewPosting(2, []uint32{10}),
 			},
 		},
 		{
 			name:  "cat",
 			input: "cat",
 			expected: []*posting.Posting{
-				posting.NewPosting(3, []uint32{3}),
+				posting.NewPosting(3, []uint32{7}),
 			},
 		},
 	} {
