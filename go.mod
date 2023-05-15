@@ -7,7 +7,7 @@ require (
 	github.com/dustin/go-wikiparse v0.0.0-20211018054215-c01ec186f20c
 	github.com/emirpasic/gods v1.18.1
 	github.com/ikawaha/kagome-dict/ipa v1.0.10
-	github.com/ikawaha/kagome/v2 v2.9.2
+	github.com/ikawaha/kagome/v2 v2.9.3
 	github.com/jwilder/encoding v0.0.0-20170811194829-b4e1701a28ef
 	github.com/stretchr/testify v1.8.2
 	github.com/syndtr/goleveldb v1.0.0
