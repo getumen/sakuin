@@ -9,7 +9,7 @@ require (
 	github.com/ikawaha/kagome-dict/ipa v1.0.10
 	github.com/ikawaha/kagome/v2 v2.9.4
 	github.com/jwilder/encoding v0.0.0-20170811194829-b4e1701a28ef
-	github.com/stretchr/testify v1.8.4
+	github.com/stretchr/testify v1.9.0
 	github.com/syndtr/goleveldb v1.0.0
 	golang.org/x/sync v0.6.0
 	golang.org/x/text v0.14.0
